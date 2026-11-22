@@ -11,6 +11,7 @@ const router = express.Router();
 const loginLimiter = new sec.AttemptLimiter({ max: 5, windowMs: 15 * 60 * 1000, blockMs: 15 * 60 * 1000 });
 const registerLimiter = new sec.AttemptLimiter({ max: 8, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000 });
 const recoverLimiter = new sec.AttemptLimiter({ max: 5, windowMs: 15 * 60 * 1000, blockMs: 30 * 60 * 1000 });
+const guestLimiter = new sec.AttemptLimiter({ max: 6, windowMs: 30 * 60 * 1000, blockMs: 30 * 60 * 1000 });
 
 const MIN_PASSWORD = 8;
 
@@ -37,6 +38,19 @@ function startSession(req, res, user) {
   user.lastLoginAt = new Date().toISOString();
   store.persist();
 }
+
+/* Instant demo wallet so every visitor can play without a sign-up form. */
+router.post('/guest', (req, res) => {
+  const ip = clientIp(req);
+  const gate = guestLimiter.check(ip);
+  if (!gate.allowed) {
+    return res.status(429).json({ error: 'Too many guest wallets from this device. Please create a free account instead.' });
+  }
+  guestLimiter.fail(ip);
+  const user = store.createGuest();
+  startSession(req, res, user);
+  return res.status(201).json({ user: store.publicUser(user), guest: true });
+});
 
 router.post('/register', (req, res) => {
   const ip = clientIp(req);

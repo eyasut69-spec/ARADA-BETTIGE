@@ -192,6 +192,7 @@ function publicUser(user) {
       wins: user.stats?.wins || 0,
     },
     hasRecovery: Boolean(user.recoveryHash),
+    isGuest: Boolean(user.isGuest),
     note: user.note || '',
   };
 }
@@ -227,6 +228,32 @@ function createUser({ phone, name, password, role = 'player', balance = 0 }) {
   db().users.push(user);
   persist();
   return { user, recoveryCode };
+}
+
+/** Instant guest wallet: any visitor can play without a sign-up form. */
+function createGuest() {
+  const { salt, hash } = sec.hashPassword(crypto.randomBytes(24).toString('hex'));
+  const recovery = sec.hashRecoveryCode(sec.generateRecoveryCode());
+  const user = {
+    id: `usr_${crypto.randomUUID()}`,
+    phone: null,
+    name: 'Guest Player',
+    role: 'player',
+    balance: sec.round2(LIMITS.welcomeBonus),
+    status: 'active',
+    salt,
+    hash,
+    recoverySalt: recovery.salt,
+    recoveryHash: recovery.hash,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
+    stats: { bets: 0, wagered: 0, won: 0, wins: 0 },
+    note: 'Guest demo wallet — not linked to a phone number',
+    isGuest: true,
+  };
+  db().users.push(user);
+  persist();
+  return user;
 }
 
 function rotateRecoveryCode(user) {
@@ -582,6 +609,7 @@ module.exports = {
   findUserByPhone,
   findUserById,
   createUser,
+  createGuest,
   rotateRecoveryCode,
   adjustBalance,
   addTransaction,
