@@ -142,7 +142,7 @@ function footerHtml() {
   </div>
   <div class="footer-bottom">
     <span>© ${year} ARADA BETTING. All credits are virtual and have no cash value.</span>
-    <span>Demo platform · No real deposits · No real withdrawals</span>
+    <span>Deposits verified manually · 18+ only · Play responsibly</span>
   </div>`;
 }
 

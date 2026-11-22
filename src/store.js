@@ -19,7 +19,7 @@ function blankState() {
   return {
     meta: { version: 1, createdAt: new Date().toISOString() },
     settings: {
-      announcement: 'Demo platform — every credit is virtual. No real money is accepted or paid out.',
+      announcement: 'Deposit with Telebirr 0964050295 or CBE 1000642419928 — every payment is verified before credits are added.',
       welcomeBonus: LIMITS.welcomeBonus,
     },
     users: [],

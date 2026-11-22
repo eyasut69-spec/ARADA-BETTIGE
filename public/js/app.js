@@ -164,7 +164,7 @@ async function homePage() {
     <div class="hero-inner">
       <span class="badge badge-gold">${icon('shield')} Virtual credits only · 18+</span>
       <h1>Welcome to <span class="gold">ARADA</span><br />Betting.</h1>
-      <p class="lead">A premium demo betting floor in black, gold and white. Browse every table, play with virtual ETB and explore the full cashier and admin workflow — no real money is ever accepted or paid out.</p>
+      <p class="lead">A premium betting floor in black, gold and white. Browse every table, play with ETB credits, and top up through Telebirr or Commercial Bank of Ethiopia — every payment is verified by our team.</p>
       <div class="btn-row">
         <a class="btn btn-gold btn-lg" href="#/games">${icon('games')} Browse games</a>
         ${user ? `<a class="btn btn-outline-gold btn-lg" href="#/dashboard">${icon('grid')} My dashboard</a>` : `<button class="btn btn-outline-gold btn-lg" data-guest>${icon('sparkles')} Play instantly</button>`}
@@ -198,7 +198,7 @@ async function homePage() {
       <div class="how-card">
         <div class="guest-icon">${icon('wallet')}</div>
         <h3>3 · Use the cashier</h3>
-        <p class="muted small">Request a demo deposit, attach a payment screenshot within 19 minutes, and the operator approves or rejects it. Withdrawals follow the same review flow.</p>
+        <p class="muted small">Deposit with Telebirr or CBE, attach your payment screenshot within 19 minutes, and our team verifies it. Withdrawals follow the same review flow.</p>
       </div>
     </div>
   </section>
@@ -206,17 +206,17 @@ async function homePage() {
   <section class="section">
     <div class="grid-2">
       <div class="card">
-        <div class="card-head"><h3 class="card-title">${icon('wallet')} Deposit limits</h3><span class="badge badge-gold">Demo</span></div>
+        <div class="card-head"><h3 class="card-title">${icon('wallet')} Deposit limits</h3><span class="badge badge-gold">Verified</span></div>
         <div class="balance-line"><strong>${money(dMin, 0)}</strong><span class="muted">minimum</span></div>
         <div class="balance-line"><strong>${money(dMax, 0)}</strong><span class="muted">maximum</span></div>
-        <p class="small muted">Choose Telebirr, CBE Birr, M-PESA or a bank transfer, then upload the payment slip as demo proof. Every request carries a 19-minute review countdown.</p>
+        <p class="small muted">Choose Telebirr, CBE Birr or a CBE bank transfer, send the exact amount to the account shown, then upload your payment screenshot. Every request carries a 19-minute upload window.</p>
         <a class="btn btn-gold btn-block" href="#/deposit">${icon('wallet')} Open deposit page</a>
       </div>
       <div class="card">
         <div class="card-head"><h3 class="card-title">${icon('banknote')} Withdrawal limits</h3><span class="badge badge-gold">Demo</span></div>
         <div class="balance-line"><strong>${money(wMin, 0)}</strong><span class="muted">minimum</span></div>
         <div class="balance-line"><strong>${money(wMax, 0)}</strong><span class="muted">maximum</span></div>
-        <p class="small muted">Withdrawals are demo requests against your virtual balance. Approved requests are marked paid in the ledger; no real funds move.</p>
+        <p class="small muted">Withdrawal requests are reviewed by our team and paid out to the Telebirr or CBE account you enter. Minimum 500 ETB, maximum 50,000 ETB per request.</p>
         <a class="btn btn-outline-gold btn-block" href="#/withdraw">${icon('banknote')} Open withdrawal page</a>
       </div>
     </div>
@@ -226,7 +226,7 @@ async function homePage() {
     <div class="card cta-band">
       <div>
         <h2>Ready for the golden floor?</h2>
-        <p class="muted">Create a free demo account in seconds. No OTP, no card, no real money.</p>
+        <p class="muted">Create your account in seconds. No OTP and no card required — deposit with Telebirr or CBE.</p>
       </div>
       <div class="btn-row">
         ${user ? `<a class="btn btn-gold" href="#/games">${icon('games')} Keep playing</a>` : `<button class="btn btn-gold" data-auth="register">${icon('user')} Create account</button>`}
@@ -272,10 +272,19 @@ async function gamePage(slug) {
 
 let focusDepositId = null;
 
+function copyRow(label, value) {
+  return `<div class="copy-row">
+    <span class="tiny muted">${escapeHtml(label)}</span>
+    <strong class="copy-value">${escapeHtml(value)}</strong>
+    <button type="button" class="link-btn gold" data-copy="${escapeHtml(value)}">Copy</button>
+  </div>`;
+}
+
 function methodButton(m, active) {
   return `<button type="button" class="method${active ? ' active' : ''}" data-method="${escapeHtml(m.id)}">
     <strong>${escapeHtml(m.name)}</strong>
-    <span>${escapeHtml(m.tagline || m.hint || 'Demo payment method')}</span>
+    <span>${escapeHtml(m.tagline || m.hint || 'Payment method')}</span>
+    ${m.account ? `<span class="method-account">${escapeHtml(m.account)}</span>` : ''}
   </button>`;
 }
 
@@ -284,29 +293,35 @@ function depositLiveCard(deposit, methods) {
   const steps = method && Array.isArray(method.steps) && method.steps.length
     ? method.steps
     : [
-        'Open your payment app and prepare a demo transfer.',
-        'Submit this request, then upload the payment screenshot as demo proof.',
-        'The operator reviews the proof and approves or rejects the request.',
+        'Open Telebirr or your bank app and prepare the transfer.',
+        'Send the exact amount, then upload the payment screenshot below.',
+        'Our team verifies the payment and credits your balance.',
       ];
   const expires = new Date(deposit.expiresAt).getTime();
   return `<section class="card deposit-live mb-16">
     <div class="card-head">
       <div>
-        <span class="tiny muted">Demo deposit reference</span>
+        <span class="tiny muted">Deposit reference</span>
         <h3 class="gold">${escapeHtml(deposit.reference)}</h3>
       </div>
       ${statusBadge(deposit.status)}
     </div>
     <div class="balance-line"><strong>${money(deposit.amount)}</strong><span class="muted">${escapeHtml(deposit.methodName)}</span></div>
+    <div class="pay-details">
+      ${method && method.account ? copyRow(`${method.name} account`, method.account) : ''}
+      ${method && method.holder ? copyRow('Account name', method.holder) : ''}
+      ${copyRow('Exact amount', `${money(deposit.amount)} ETB`)}
+      ${copyRow('Transfer note', deposit.reference)}
+    </div>
     <div class="countdown-bar">
-      <span class="tiny muted">Proof window</span>
+      <span class="tiny muted">Upload window</span>
       <span class="countdown" data-expires="${expires}">19:00</span>
     </div>
     <ol class="steps">${steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
     <div class="upload-zone">
       <input type="file" id="proof-input" accept="image/png,image/jpeg,image/webp" hidden />
       <label for="proof-input" class="btn btn-gold">${icon('copy')} ${deposit.screenshot ? 'Replace screenshot' : 'Upload payment screenshot'}</label>
-      <p class="tiny muted">PNG, JPG or WEBP · maximum 6 MB · stored as demo proof only.</p>
+      <p class="tiny muted">PNG, JPG or WEBP · maximum 6 MB · a clear screenshot speeds up approval.</p>
     </div>
     ${deposit.screenshot ? `<p class="tiny muted">Proof attached ${timeAgo(deposit.screenshot.uploadedAt)} (${Math.round(deposit.screenshot.size / 1024)} KB). Awaiting review.</p>` : ''}
   </section>`;
@@ -339,7 +354,7 @@ async function depositPage() {
   if (!state.user) {
     return authGate(
       'Sign in to deposit demo credits',
-      'Deposits are virtual requests reviewed by the operator. No real payment is processed.',
+      'Sign in to see the Telebirr and CBE accounts, then upload your payment proof.',
       `<div class="stat-grid mb-16">
         ${stat('Minimum deposit', money(limit('depositMin', 100), 0))}
         ${stat('Maximum deposit', money(limit('depositMax', 10000), 0))}
@@ -354,14 +369,14 @@ async function depositPage() {
   const active = focus ? focus.method : methods[0]?.id || '';
 
   return `${pageHead(
-    'Deposit demo credits',
-    `Virtual deposits between ${money(min, 0)} and ${money(max, 0)}. Requests are reviewed by the operator.`,
+    'Deposit ETB',
+    `Send between ${money(min, 0)} and ${money(max, 0)} to the account shown, then upload your payment screenshot for verification.`,
     `<a class="btn btn-ghost btn-sm" href="#/withdraw">${icon('banknote')} Withdraw</a>`,
   )}
   ${focus ? depositLiveCard(focus, methods) : ''}
   <div class="grid-2">
     <form class="card" id="deposit-form" novalidate>
-      <div class="card-head"><h3 class="card-title">${icon('wallet')} New demo deposit</h3><span class="badge badge-gold">Virtual</span></div>
+      <div class="card-head"><h3 class="card-title">${icon('wallet')} New deposit</h3><span class="badge badge-gold">19-min window</span></div>
       ${field('Payment method', `<div class="method-grid" id="method-grid">${methods.map((m) => methodButton(m, m.id === active)).join('')}</div><input type="hidden" name="method" value="${escapeHtml(active)}" />`)}
       ${field(
         'Amount (ETB)',
@@ -372,23 +387,26 @@ async function depositPage() {
            .join('')}</div>`,
         `Minimum ${money(min, 0)} · Maximum ${money(max, 0)}`,
       )}
-      <button class="btn btn-gold btn-block" type="submit">${icon('check')} Create demo deposit request</button>
+      <button class="btn btn-gold btn-block" type="submit">${icon('check')} Create deposit request</button>
     </form>
 
     <div class="card">
-      <div class="card-head"><h3 class="card-title">${icon('info')} Demo payment instructions</h3></div>
+      <div class="card-head"><h3 class="card-title">${icon('info')} Where to send your payment</h3></div>
+      <div class="pay-details">
+        ${methods.filter((m) => m.account).map((m) => copyRow(m.name, m.account)).join('')}
+      </div>
       <ol class="steps">
-        <li>Pick a method and an amount inside the allowed range.</li>
-        <li>Submit the request to receive a reference and a 19-minute proof window.</li>
-        <li>Upload the payment screenshot as demo proof.</li>
-        <li>The operator approves or rejects it in the admin dashboard.</li>
+        <li>Pick a method and enter an amount inside the allowed range.</li>
+        <li>Send the exact amount to the account shown and keep the confirmation SMS.</li>
+        <li>Submit the request to receive a reference and a 19-minute upload window.</li>
+        <li>Upload your payment screenshot; our team verifies it and credits your balance.</li>
       </ol>
-      <div class="pill-note">${icon('shield')}<div>ARADA BETTING is a demo platform. Never send real money — every credit here is virtual and has no cash value.</div></div>
+      <div class="pill-note">${icon('shield')}<div>Every payment is checked by our team before credits are added. Send the exact amount and keep your screenshot until it is approved.</div></div>
     </div>
   </div>
 
   <section class="section">
-    ${pageHead('My deposit requests', 'Pending, approved and rejected demo deposits.')}
+    ${pageHead('My deposit requests', 'Pending, approved and rejected deposits.')}
     <div class="card">${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(deposits), 'No demo deposits yet.')}</div>
   </section>`;
 }
@@ -410,7 +428,7 @@ async function withdrawPage() {
   if (!state.user) {
     return authGate(
       'Sign in to request a demo withdrawal',
-      'Withdrawals are virtual requests reviewed by the operator. No real money is transferred.',
+      'Withdrawals are reviewed by our team and paid out to your Telebirr or CBE account.',
       `<div class="stat-grid mb-16">
         ${stat('Minimum withdrawal', money(limit('withdrawMin', 500), 0))}
         ${stat('Maximum withdrawal', money(limit('withdrawMax', 50000), 0))}
@@ -424,24 +442,24 @@ async function withdrawPage() {
   const balance = Number(state.user.balance || 0);
 
   return `${pageHead(
-    'Withdraw demo credits',
-    `Virtual withdrawals between ${money(min, 0)} and ${money(max, 0)}, paid from your demo balance.`,
+    'Withdraw ETB',
+    `Request between ${money(min, 0)} and ${money(max, 0)} from your balance. Our team pays out to your Telebirr or CBE account.`,
     `<a class="btn btn-ghost btn-sm" href="#/deposit">${icon('wallet')} Deposit</a>`,
   )}
   <div class="stat-grid mb-16">
     ${stat('Minimum withdrawal', money(min, 0))}
     ${stat('Maximum withdrawal', money(max, 0))}
-    ${stat('Available demo balance', money(balance))}
+    ${stat('Available balance', money(balance))}
   </div>
   <div class="grid-2">
     <form class="card" id="withdraw-form" novalidate>
-      <div class="card-head"><h3 class="card-title">${icon('banknote')} New demo withdrawal</h3><span class="badge badge-gold">Virtual</span></div>
+      <div class="card-head"><h3 class="card-title">${icon('banknote')} New withdrawal</h3><span class="badge badge-gold">Reviewed</span></div>
       ${field('Payout method', `<div class="method-grid" id="method-grid">${methods.map((m, i) => methodButton(m, i === 0)).join('')}</div><input type="hidden" name="method" value="${escapeHtml(methods[0]?.id || '')}" />`)}
       ${field('Amount (ETB)', `<input class="input" id="wd-amount" name="amount" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" placeholder="${min}" required />`, `Minimum ${money(min, 0)} · Maximum ${money(max, 0)} · Balance ${money(balance)}`)}
       ${field('Account holder name', `<input class="input" name="accountName" id="wd-name" type="text" maxlength="60" placeholder="Full name on the account" required />`)}
       ${field('Account / wallet number', `<input class="input" name="accountNumber" id="wd-account" type="tel" inputmode="numeric" maxlength="20" placeholder="09xxxxxxxx" required />`)}
-      <button class="btn btn-gold btn-block" type="submit">${icon('check')} Request demo withdrawal</button>
-      <p class="tiny muted">Requests are reviewed by the operator. No real money is transferred.</p>
+      <button class="btn btn-gold btn-block" type="submit">${icon('check')} Request withdrawal</button>
+      <p class="tiny muted">Requests are reviewed by our team before payout.</p>
     </form>
     <div class="card">
       <div class="card-head"><h3 class="card-title">${icon('info')} Withdrawal rules</h3></div>
@@ -449,9 +467,9 @@ async function withdrawPage() {
         <li>Minimum request: <strong>${money(min, 0)}</strong>.</li>
         <li>Maximum request: <strong>${money(max, 0)}</strong>.</li>
         <li>The amount must be covered by your virtual balance.</li>
-        <li>Approved requests are marked paid in the ledger; rejected requests return the credits.</li>
+        <li>Approved requests are paid out to your account; rejected requests return the balance.</li>
       </ol>
-      <div class="pill-note">${icon('alert')}<div>Demo only. ARADA BETTING never processes real withdrawals or real-money betting.</div></div>
+      <div class="pill-note">${icon('alert')}<div>Payouts are manual. Make sure the account name and number you enter are correct. 18+ only.</div></div>
     </div>
   </div>
   <section class="section">
@@ -876,7 +894,7 @@ function adminScreenshotsHtml(items) {
 
 function noteModal({ title, label, confirmLabel, onConfirm }) {
   openModal(
-    `${modalHead(title, 'Demo platform — operator action')}
+    `${modalHead(title, 'Operator action')}
      <div class="field"><label for="admin-note">${escapeHtml(label)}</label>
        <textarea class="input" id="admin-note" rows="3" maxlength="160" placeholder="Optional note"></textarea></div>
      <div class="modal-actions">
@@ -1120,7 +1138,7 @@ function promotionsPage() {
   <div class="grid-3">
     <div class="card"><div class="guest-icon">${icon('gift')}</div><h3>Welcome credits</h3><p class="muted small">Every new account starts with ${bonus} in virtual credits. Guest wallets receive the same amount.</p><a class="btn btn-gold btn-block" href="#/games">Play now</a></div>
     <div class="card"><div class="guest-icon">${icon('refresh')}</div><h3>Cashier practice</h3><p class="muted small">Run the full deposit and withdrawal flow with screenshots and operator review — all virtual.</p><a class="btn btn-outline-gold btn-block" href="#/deposit">Open cashier</a></div>
-    <div class="card"><div class="guest-icon">${icon('shield')}</div><h3>Responsible play</h3><p class="muted small">No real money is involved. Set your own limits and treat the platform as a product demo.</p><a class="btn btn-ghost btn-block" href="#/responsible">Read guidance</a></div>
+    <div class="card"><div class="guest-icon">${icon('shield')}</div><h3>Responsible play</h3><p class="muted small">Set your own limits, take breaks and only play with money you can afford to lose.</p><a class="btn btn-ghost btn-block" href="#/responsible">Read guidance</a></div>
   </div>`;
 }
 
@@ -1146,7 +1164,7 @@ function supportPage() {
         <a class="mini-item" href="#/dashboard">${icon('grid')} My dashboard</a>
         <a class="mini-item" href="#/terms">${icon('shield')} Terms & demo rules</a>
       </div>
-      <div class="pill-note">${icon('alert')}<div>Demo support only — there is no real-money account, wallet or payout behind this platform.</div></div>
+      <div class="pill-note">${icon('alert')}<div>Include your deposit reference when contacting support so we can match your payment quickly.</div></div>
     </div>
   </div>`;
 }
@@ -1173,7 +1191,7 @@ function termsPage() {
       <li>Deposits (100 – 10,000 ETB) and withdrawals (500 – 50,000 ETB) are virtual requests reviewed by the operator.</li>
       <li>Uploaded screenshots are stored only as demonstration proof and are visible to the operator.</li>
       <li>Abuse, automation or attempts to break the demo may result in a blocked account.</li>
-      <li>18+ only. No real-money gambling is offered or facilitated.</li>
+      <li>18+ only. Play responsibly and set your own limits.</li>
     </ol>
     <a class="btn btn-gold" href="#/games">${icon('games')} Back to the games</a>
   </div>`;
@@ -1301,6 +1319,21 @@ async function render() {
     rootEl.querySelectorAll('[data-amount]').forEach((chip) => {
       chip.addEventListener('click', () => {
         if (amountInput) amountInput.value = chip.dataset.amount;
+      });
+    });
+    rootEl.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const value = btn.getAttribute('data-copy') || '';
+        const label = btn.textContent;
+        try {
+          await navigator.clipboard.writeText(value);
+          btn.textContent = 'Copied ✓';
+        } catch {
+          btn.textContent = 'Select & copy';
+        }
+        setTimeout(() => {
+          btn.textContent = label;
+        }, 1800);
       });
     });
 
