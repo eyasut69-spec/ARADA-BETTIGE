@@ -2,7 +2,11 @@
 
 /**
  * Shared catalog + business constants for ARADA BETTING.
- * Everything here is DEMO / virtual credit only.
+ *
+ * Payments are collected manually on the real accounts below and verified by an
+ * operator before credits are added. Override any destination without editing
+ * code by setting DEPOSIT_TELEBIRR_NUMBER, DEPOSIT_CBE_ACCOUNT or
+ * DEPOSIT_ACCOUNT_NAME in the hosting environment.
  */
 
 const CURRENCY = 'ETB';
@@ -15,90 +19,66 @@ const LIMITS = {
   minBet: 10,
   maxBet: 10000,
   welcomeBonus: 1000,
-  depositWindowMs: 19 * 60 * 1000, // 19 minute demo deposit window
+  depositWindowMs: 19 * 60 * 1000, // 19 minute window to upload payment proof
 };
 
 const TRANSACTION_STATUSES = ['pending', 'approved', 'rejected'];
+
+const PAYMENT_ACCOUNTS = {
+  holder: process.env.DEPOSIT_ACCOUNT_NAME || 'ARADA BETTING',
+  telebirr: process.env.DEPOSIT_TELEBIRR_NUMBER || '0964050295',
+  cbe: process.env.DEPOSIT_CBE_ACCOUNT || '1000642419928',
+};
 
 const DEPOSIT_METHODS = [
   {
     id: 'telebirr',
     name: 'Telebirr',
     tagline: 'Ethio Telecom mobile money',
-    account: '0911 000 000',
-    holder: 'ARADA BETTING (DEMO)',
+    account: PAYMENT_ACCOUNTS.telebirr,
+    holder: PAYMENT_ACCOUNTS.holder,
     accent: '#22c55e',
     steps: [
       'Open Telebirr and choose "Send Money".',
-      'Send your demo amount to 0911 000 000 (ARADA BETTING DEMO).',
-      'Copy the transaction reference from the confirmation SMS.',
-      'Upload a screenshot of the confirmation as demo proof below.',
+      `Send the exact deposit amount to ${PAYMENT_ACCOUNTS.telebirr} (${PAYMENT_ACCOUNTS.holder}).`,
+      'Copy the transaction number from the confirmation SMS.',
+      'Upload a screenshot of the confirmation below. Our team verifies it and credits your balance.',
     ],
   },
   {
     id: 'cbebirr',
     name: 'CBE Birr',
     tagline: 'Commercial Bank of Ethiopia wallet',
-    account: '1000 2345 6789 0',
-    holder: 'ARADA BETTING (DEMO)',
+    account: PAYMENT_ACCOUNTS.cbe,
+    holder: PAYMENT_ACCOUNTS.holder,
     accent: '#a855f7',
     steps: [
-      'Open CBE Birr and pick "Transfer to Wallet".',
-      'Send your demo amount to 1000 2345 6789 0.',
-      'Save the confirmation message reference.',
-      'Upload the confirmation screenshot as demo proof below.',
-    ],
-  },
-  {
-    id: 'abyssinia',
-    name: 'Bank of Abyssinia',
-    tagline: 'Apollo mobile banking',
-    account: '8812 3456 789',
-    holder: 'ARADA BETTING (DEMO)',
-    accent: '#38bdf8',
-    steps: [
-      'Open Apollo and select "Fund Transfer".',
-      'Transfer to account 8812 3456 789 (ARADA BETTING DEMO).',
-      'Note the reference number shown after transfer.',
-      'Upload the receipt screenshot as demo proof below.',
-    ],
-  },
-  {
-    id: 'mpesa',
-    name: 'M-PESA',
-    tagline: 'Safaricom mobile money',
-    account: '0911 000 000',
-    holder: 'ARADA BETTING (DEMO)',
-    accent: '#ef4444',
-    steps: [
-      'Open M-PESA and choose "Send Money".',
-      'Send your demo amount to 0911 000 000.',
-      'Copy the M-PESA confirmation code.',
-      'Upload the confirmation screenshot as demo proof below.',
+      'Open CBE Birr and choose "Transfer" then "To CBE Account".',
+      `Send the exact deposit amount to ${PAYMENT_ACCOUNTS.cbe} (${PAYMENT_ACCOUNTS.holder}).`,
+      'Save the transaction number shown after the transfer.',
+      'Upload the confirmation screenshot below for verification.',
     ],
   },
   {
     id: 'bank',
-    name: 'Bank Transfer',
-    tagline: 'Any Ethiopian bank',
-    account: '1000 2345 6789 0',
-    holder: 'ARADA BETTING (DEMO)',
+    name: 'CBE Bank Transfer',
+    tagline: 'Commercial Bank of Ethiopia account',
+    account: PAYMENT_ACCOUNTS.cbe,
+    holder: PAYMENT_ACCOUNTS.holder,
     accent: '#d4af37',
     steps: [
-      'Transfer your demo amount to 1000 2345 6789 0 (CBE, ARADA BETTING DEMO).',
-      'Keep the transfer slip or screenshot.',
-      'Submit the request, then upload the slip as demo proof.',
-      'Demo review is normally instant in this environment.',
+      `Transfer the exact deposit amount to CBE account ${PAYMENT_ACCOUNTS.cbe} (${PAYMENT_ACCOUNTS.holder}).`,
+      'Use mobile banking, an ATM or a branch deposit.',
+      'Keep the transfer slip with the transaction number visible.',
+      'Upload the slip below. Our team verifies the payment and credits your balance.',
     ],
   },
 ];
 
 const WITHDRAW_METHODS = [
   { id: 'telebirr', name: 'Telebirr', hint: '09xxxxxxxx' },
-  { id: 'cbebirr', name: 'CBE Birr', hint: '10 digit wallet number' },
-  { id: 'mpesa', name: 'M-PESA', hint: '09xxxxxxxx' },
-  { id: 'abyssinia', name: 'Bank of Abyssinia', hint: 'Account number' },
-  { id: 'bank', name: 'Bank Transfer', hint: 'Account number' },
+  { id: 'cbebirr', name: 'CBE Birr', hint: 'CBE wallet number' },
+  { id: 'bank', name: 'CBE Bank Transfer', hint: 'CBE account number' },
 ];
 
 const GAME_DEFS = [
@@ -148,7 +128,7 @@ const GAME_DEFS = [
     accent: '#f5d67b',
     howTo: [
       'Choose Heads or Tails.',
-      'Place your demo stake and flip the royal coin.',
+      'Place your stake and flip the royal coin.',
       'A correct call pays 1.96x your stake instantly.',
     ],
   },
@@ -180,7 +160,7 @@ const GAME_DEFS = [
     accent: '#a855f7',
     howTo: [
       'Pick any digit from 0 to 9.',
-      'Place your demo stake and draw the lucky digit.',
+      'Place your stake and draw the lucky digit.',
       'A perfect match pays 9.5x instantly.',
     ],
   },
@@ -194,6 +174,7 @@ module.exports = {
   CURRENCY,
   LIMITS,
   TRANSACTION_STATUSES,
+  PAYMENT_ACCOUNTS,
   DEPOSIT_METHODS,
   WITHDRAW_METHODS,
   GAME_DEFS,
