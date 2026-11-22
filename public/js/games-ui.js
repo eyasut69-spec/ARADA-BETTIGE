@@ -2,6 +2,7 @@
 
 import { state, api, money, amount, toast, escapeHtml, onCleanup, refreshUser, setUser } from './api.js';
 import { icon, updateBalance, statusBadge } from './ui.js';
+import { gameLogo } from './logos.js';
 
 /* ------------------------------------------------------------------ shared */
 
@@ -74,7 +75,9 @@ function gameHead(game) {
   return `<div class="page-head">
     <a class="back-link" href="#/games">${icon('arrowLeft')} All games</a>
     <div class="row-between wrap gap-16">
-      <div>
+      <div class="game-head-main">
+        ${gameLogo(game.slug, 'game-head-logo')}
+        <div>
         <div class="chip-row mb-8">
           <span class="badge badge-gold">${escapeHtml(game.badge || game.category)}</span>
           <span class="badge">${escapeHtml(game.category)}</span>
@@ -82,6 +85,7 @@ function gameHead(game) {
         </div>
         <h1>${escapeHtml(game.name)}</h1>
         <p class="muted">${escapeHtml(game.short)}</p>
+        </div>
       </div>
       <div class="game-facts">
         <div><span>RTP</span><strong>${(Number(game.rtp) * 100).toFixed(0)}%</strong></div>
@@ -96,7 +100,7 @@ function howTo(game) {
   return `<section class="card how-card">
     <div class="card-head"><h3>${icon('info')} How ${escapeHtml(game.name)} works</h3></div>
     <ol class="steps">${(game.howTo || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
-    <div class="pill-note mt-16">${icon('shield')}<div>Every round is settled on the server with cryptographically secure randomness. All stakes and payouts are <strong>virtual demo credits</strong> — never real money.</div></div>
+    <div class="pill-note mt-16">${icon('shield')}<div>Every round is settled on the server with cryptographically secure randomness and recorded in your wallet, game history and transactions.</div></div>
   </section>`;
 }
 
@@ -105,8 +109,8 @@ function guestLock(game) {
     <div class="guest-lock">
       <div class="guest-icon">${icon('sparkles')}</div>
       <h2>Play ${escapeHtml(game.name)} instantly</h2>
-      <p class="muted">No sign-up form needed to try a round. Start with a guest demo wallet of ${money(state.config?.limits?.welcomeBonus ?? 1000, 0)} in virtual credits.</p>
-      <button class="btn btn-gold" data-play-guest>${icon('play')} Play instantly with demo credits</button>
+      <p class="muted">No sign-up form needed to try a round. Start with a guest wallet of ${money(state.config?.limits?.welcomeBonus ?? 1000, 0)} in credits.</p>
+      <button class="btn btn-gold" data-play-guest>${icon('play')} Play instantly</button>
       <div class="divider"></div>
       <p class="tiny muted">Want to keep your balance and history? <button class="link-btn gold" data-auth="register">Create a free account</button> or <button class="link-btn gold" data-auth="login">sign in</button>.</p>
     </div>
@@ -118,16 +122,16 @@ function bindGuest(root) {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    btn.innerHTML = '<span class="loader"></span> Preparing your demo wallet…';
+    btn.innerHTML = '<span class="loader"></span> Preparing your wallet…';
     try {
       const data = await api('/api/auth/guest', { method: 'POST' });
       setUser(data.user);
-      toast(`Guest demo wallet ready with ${money(data.user.balance, 0)}.`, 'success');
+      toast(`Guest wallet ready with ${money(data.user.balance, 0)}.`, 'success');
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     } catch (err) {
       toast(err.message, 'error');
       btn.disabled = false;
-      btn.innerHTML = `${icon('play')} Play instantly with demo credits`;
+      btn.innerHTML = `${icon('play')} Play instantly`;
     }
   });
 }
