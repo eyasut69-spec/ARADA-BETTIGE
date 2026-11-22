@@ -279,6 +279,8 @@ function recoveryCodeHtml(code, message) {
 export function openAuthModal(mode = 'login', { message = '' } = {}) {
   const config = state.config || {};
   const welcome = config.limits?.welcomeBonus ?? 1000;
+  const refBonus = config.limits?.referralBonus ?? 100;
+  const pendingRef = String(state.pendingReferral || '').toUpperCase();
   const forms = {
     login: `
       <form id="auth-form" novalidate>
@@ -293,7 +295,7 @@ export function openAuthModal(mode = 'login', { message = '' } = {}) {
         </div>
         <div id="auth-error" class="pill-note danger hidden">${icon('alert')}<div></div></div>
         <button class="btn btn-gold btn-block mt-8" type="submit">${icon('lock')} Sign in</button>
-        <p class="tiny muted center mt-12">No OTP is required. New here? <a href="#/" data-auth-mode="register" class="gold">Create a free demo account</a>.</p>
+        <p class="tiny muted center mt-12">No OTP is required. New here? <a href="#/" data-auth-mode="register" class="gold">Create your account</a>.</p>
       </form>
       ${demoHintsHtml()}`,
     register: `
@@ -306,8 +308,11 @@ export function openAuthModal(mode = 'login', { message = '' } = {}) {
         <div class="field"><label for="reg-password">Password</label>
           <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required />
           <span class="hint">Use 8+ characters with at least one letter and one number.</span></div>
+        <div class="field"><label for="reg-referral">Invite code (optional)</label>
+          <input class="input" id="reg-referral" name="referral" autocomplete="off" maxlength="20" placeholder="ARADA1A2B" value="${escapeHtml(pendingRef)}" />
+          <span class="hint">Enter a friend's invite code and you both receive ${money(refBonus, 0)}.</span></div>
         <label class="checkbox mb-8"><input type="checkbox" name="terms" required />
-          <span>I understand ARADA BETTING is a <strong>virtual demo</strong> — no real deposits, withdrawals or real-money betting.</span></label>
+          <span>I am 18+ and accept the ARADA BETTING terms. Betting involves risk — play responsibly.</span></label>
         <div id="auth-error" class="pill-note danger hidden">${icon('alert')}<div></div></div>
         <button class="btn btn-gold btn-block mt-8" type="submit">${icon('gift')} Create account · ${money(welcome, 0)} free</button>
         <p class="tiny muted center mt-12">Already registered? <a href="#/" data-auth-mode="login" class="gold">Sign in</a></p>
@@ -329,7 +334,7 @@ export function openAuthModal(mode = 'login', { message = '' } = {}) {
 
   const titles = {
     login: ['Welcome back', 'Sign in with your phone number and password.'],
-    register: ['Join ARADA BETTING', 'Create a free account and receive demo credits instantly.'],
+    register: ['Join ARADA BETTING', 'Register with a phone number and password — no OTP needed.'],
     recover: ['Recover your password', 'Reset access with the recovery code from sign-up.'],
   };
   const [title, sub] = titles[mode] || titles.login;
@@ -397,6 +402,7 @@ export function openAuthModal(mode = 'login', { message = '' } = {}) {
                 phone: form.phone.value.trim(),
                 password: form.password.value,
                 acceptedTerms: form.terms.checked,
+                referral: form.referral ? form.referral.value.trim() : '',
               },
             });
             setUser(data.user);
