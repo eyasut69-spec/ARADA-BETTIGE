@@ -115,8 +115,8 @@ function footerHtml() {
         <span class="brand-mark">A</span>
         <span class="brand-text"><span class="brand-name">ARADA</span><span class="brand-sub">Betting</span></span>
       </a>
-      <p>A premium virtual-money betting demo. Play with demo credits, explore the full cashier and admin workflow — no real money is ever accepted or paid out.</p>
-      <span class="age-chip">${icon('shield')} 18+ · Demo only</span>
+      <p>Ethiopia's premium betting floor. Fund with Telebirr or CBE, play every table, and cash out through the cashier — each deposit is checked by an operator before credits are added.</p>
+      <span class="age-chip">${icon('shield')} 18+ · Play responsibly</span>
     </div>
     <div class="footer-col">
       <h4>Play</h4>
@@ -141,7 +141,7 @@ function footerHtml() {
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© ${year} ARADA BETTING. All credits are virtual and have no cash value.</span>
+    <span>© ${year} ARADA BETTING. Deposits are verified by an operator before credits are added.</span>
     <span>Deposits verified manually · 18+ only · Play responsibly</span>
   </div>`;
 }

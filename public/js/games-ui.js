@@ -21,7 +21,7 @@ function stakeField(game, { label = 'Stake' } = {}) {
       <span class="affix">ETB</span>
     </div>
     <div class="chip-row mt-8">${chips}<button type="button" class="chip" data-stake="max">Max</button></div>
-    <span class="hint">${money(min, 0)} – ${money(max, 0)} per round · virtual credits</span>
+    <span class="hint">${money(min, 0)} – ${money(max, 0)} per round · ETB balance</span>
   </div>`;
 }
 
@@ -214,7 +214,7 @@ function mountCrash(root, game) {
     const win = round.status === 'cashed';
     if (win) {
       statusEl.textContent = `Cashed out at ${Number(round.multiplier).toFixed(2)}x`;
-      resultEl.innerHTML = resultPanel('win', `You banked ${money(round.payout)}`, `Stake ${money(round.stake)} at ${Number(round.multiplier).toFixed(2)}x · virtual credits`);
+      resultEl.innerHTML = resultPanel('win', `You banked ${money(round.payout)}`, `Stake ${money(round.stake)} at ${Number(round.multiplier).toFixed(2)}x · ETB balance`);
       history.unshift({ win: true, label: `Cashed at ${Number(round.multiplier).toFixed(2)}x`, meta: money(round.stake), payout: round.payout });
     } else {
       statusEl.textContent = `Crashed at ${Number(round.crashPoint || 1).toFixed(2)}x`;
