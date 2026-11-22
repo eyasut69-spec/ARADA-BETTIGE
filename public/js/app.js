@@ -985,7 +985,7 @@ async function adminPage() {
               async onConfirm(note) {
                 const data = await api(`/api/admin/${kind}/${id}/decision`, {
                   method: 'POST',
-                  body: { action: approve ? 'approve' : 'reject', note },
+                  body: { decision: approve ? 'approve' : 'reject', note },
                 });
                 toast(data.message, approve ? 'success' : 'info');
                 await load(current);
@@ -1000,7 +1000,7 @@ async function adminPage() {
               async onConfirm(note) {
                 const data = await api(`/api/admin/withdrawals/${id}/decision`, {
                   method: 'POST',
-                  body: { action: approve ? 'approve' : 'reject', note },
+                  body: { decision: approve ? 'approve' : 'reject', note },
                 });
                 toast(data.message, approve ? 'success' : 'info');
                 await load(current);
