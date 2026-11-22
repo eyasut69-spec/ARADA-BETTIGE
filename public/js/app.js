@@ -1169,8 +1169,8 @@ function supportPage() {
     ['How do I fund my account?', 'Choose Telebirr or CBE, transfer to the account shown on the deposit page, then upload your payment screenshot within 19 minutes for operator approval.'],
     ['Do I need an OTP to sign in?', 'No. Sign in with your phone number and password. A recovery code handles forgotten passwords without any SMS step.'],
     ['How do deposits work?', 'Create a request between 100 and 10,000 ETB, upload a payment screenshot within the 19-minute window, and the operator approves or rejects it.'],
-    ['What are the withdrawal limits?', 'Minimum 500 ETB and maximum 50,000 ETB per demo request, and the amount must be covered by your balance.'],
-    ['Can I play without registering?', 'Yes. Open a guest demo wallet instantly from the home page or any locked page, then convert it into a full account whenever you like.'],
+    ['What are the withdrawal limits?', 'Minimum 500 ETB and maximum 50,000 ETB per request, and the amount must be covered by your balance.'],
+    ['Can I play without registering?', 'Yes. Open a guest wallet instantly from the home page or any locked page, then convert it into a full account whenever you like.'],
   ];
   return `${pageHead('Support & FAQ', 'Answers about the platform.')}
   <div class="grid-2">
@@ -1184,7 +1184,7 @@ function supportPage() {
         <a class="mini-item" href="#/deposit">${icon('wallet')} Deposit credits</a>
         <a class="mini-item" href="#/withdraw">${icon('banknote')} Withdraw credits</a>
         <a class="mini-item" href="#/dashboard">${icon('grid')} My dashboard</a>
-        <a class="mini-item" href="#/terms">${icon('shield')} Terms & demo rules</a>
+        <a class="mini-item" href="#/terms">${icon('shield')} Terms & rules</a>
       </div>
       <div class="pill-note">${icon('alert')}<div>Include your deposit reference when contacting support so we can match your payment quickly.</div></div>
     </div>
@@ -1192,11 +1192,11 @@ function supportPage() {
 }
 
 function responsiblePage() {
-  return `${pageHead('Responsible play', 'This is a demo — keep it that way.')}
+  return `${pageHead('Responsible play', 'Keep your sessions balanced.')}
   <div class="card">
     <ol class="steps">
-      <li>All credits are virtual and cannot be bought, sold or exchanged for money.</li>
-      <li>Take regular breaks and treat every session as a product demonstration.</li>
+      <li>Deposits are added only after an operator verifies your payment screenshot.</li>
+      <li>Take regular breaks and set your own limits before you play.</li>
       <li>If gambling affects your life, seek local support. This platform is 18+ only.</li>
       <li>Operators can block accounts at any time to enforce safe use.</li>
     </ol>
@@ -1205,14 +1205,14 @@ function responsiblePage() {
 }
 
 function termsPage() {
-  return `${pageHead('Terms & demo rules', 'The short version: everything here is virtual.')}
+  return `${pageHead('Terms & rules', 'Deposits, withdrawals and responsible play.')}
   <div class="card">
     <ol class="steps">
       <li>Accounts are accounts identified by a phone number and password.</li>
-      <li>Demo credits have no monetary value and are non-transferable.</li>
-      <li>Deposits (100 – 10,000 ETB) and withdrawals (500 – 50,000 ETB) are virtual requests reviewed by the operator.</li>
-      <li>Uploaded screenshots are stored only as demonstration proof and are visible to the operator.</li>
-      <li>Abuse, automation or attempts to break the demo may result in a blocked account.</li>
+      <li>Credits are added only after an operator verifies your payment.</li>
+      <li>Deposits (100 – 10,000 ETB) and withdrawals (500 – 50,000 ETB) are requests reviewed by the operator.</li>
+      <li>Uploaded screenshots are stored as payment proof and are visible to the operator.</li>
+      <li>Abuse, automation or attempts to break the platform may result in a blocked account.</li>
       <li>18+ only. Play responsibly and set your own limits.</li>
     </ol>
     <a class="btn btn-gold" href="#/games">${icon('games')} Back to the games</a>
@@ -1366,7 +1366,7 @@ async function render() {
       const min = limit('depositMin', 100);
       const max = limit('depositMax', 10000);
       if (!Number.isFinite(amount) || amount < min || amount > max) {
-        toast(`Demo deposits must be between ${money(min, 0)} and ${money(max, 0)}.`, 'error');
+        toast(`Deposits must be between ${money(min, 0)} and ${money(max, 0)}.`, 'error');
         return;
       }
       submit.disabled = true;
@@ -1376,7 +1376,7 @@ async function render() {
           body: { amount, method: form.method.value },
         });
         focusDepositId = data.deposit.id;
-        toast(data.message || 'Demo deposit created.', 'success');
+        toast(data.message || 'Deposit request created.', 'success');
         await render();
       } catch (err) {
         toast(err.message, 'error');
@@ -1441,7 +1441,7 @@ async function render() {
       const min = limit('withdrawMin', 500);
       const max = limit('withdrawMax', 50000);
       if (!Number.isFinite(amount) || amount < min || amount > max) {
-        toast(`Demo withdrawals must be between ${money(min, 0)} and ${money(max, 0)}.`, 'error');
+        toast(`Withdrawals must be between ${money(min, 0)} and ${money(max, 0)}.`, 'error');
         return;
       }
       if (amount > Number(state.user.balance)) {
