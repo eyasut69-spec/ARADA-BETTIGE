@@ -664,6 +664,255 @@ function mountLucky(root, game) {
   });
 }
 
+/* ------------------------------------------------------- card table helpers */
+
+const SUIT_GLYPH = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
+
+function cardHtml(card) {
+  if (!card) return '<div class="playing-card back" aria-hidden="true"></div>';
+  const red = card.suit === 'hearts' || card.suit === 'diamonds';
+  return `<div class="playing-card${red ? ' red' : ''}">
+    <span class="pc-rank">${escapeHtml(card.rank)}</span>
+    <span class="pc-suit">${SUIT_GLYPH[card.suit] || '♠'}</span>
+  </div>`;
+}
+
+/* ----------------------------------------------------------------- baccarat */
+
+function baccaratView(game) {
+  return `<div class="game-layout">
+    <section class="card game-stage">
+      <div class="table-felt">
+        <div class="table-side">
+          <div class="table-side-head"><span>Banker</span><strong id="bac-banker-total">–</strong></div>
+          <div class="card-row" id="bac-banker-cards">${cardHtml(null)}${cardHtml(null)}</div>
+        </div>
+        <div class="table-vs">VS</div>
+        <div class="table-side">
+          <div class="table-side-head"><span>Player</span><strong id="bac-player-total">–</strong></div>
+          <div class="card-row" id="bac-player-cards">${cardHtml(null)}${cardHtml(null)}</div>
+        </div>
+      </div>
+      <div class="stage-status" id="bac-status">Choose Player, Banker or Tie, then deal.</div>
+      <div id="bac-result"></div>
+    </section>
+    <aside class="card game-controls">
+      <div class="card-head"><h3>${icon('games')} Place your bet</h3></div>
+      <div class="field">
+        <label>Side</label>
+        <div class="seg" id="bac-bet">
+          <button type="button" class="active" data-bac-bet="player">Player · 2x</button>
+          <button type="button" data-bac-bet="banker">Banker · 1.95x</button>
+          <button type="button" data-bac-bet="tie">Tie · 9x</button>
+        </div>
+      </div>
+      ${stakeField(game)}
+      <button class="btn btn-gold btn-block" id="bac-deal">${icon('play')} Deal cards</button>
+      <div class="divider"></div>
+      <div id="bac-history">${historyList([], 'No hands yet.')}</div>
+    </aside>
+  </div>
+  ${howTo(game)}`;
+}
+
+function mountBaccarat(root, game) {
+  const stake = bindStake(root, game);
+  const betBox = root.querySelector('#bac-bet');
+  const statusEl = root.querySelector('#bac-status');
+  const resultEl = root.querySelector('#bac-result');
+  const playerCards = root.querySelector('#bac-player-cards');
+  const bankerCards = root.querySelector('#bac-banker-cards');
+  const playerTotal = root.querySelector('#bac-player-total');
+  const bankerTotal = root.querySelector('#bac-banker-total');
+  const historyEl = root.querySelector('#bac-history');
+  const btn = root.querySelector('#bac-deal');
+  const history = [];
+  let bet = 'player';
+
+  betBox.querySelectorAll('[data-bac-bet]').forEach((b) => {
+    b.addEventListener('click', () => {
+      bet = b.dataset.bacBet;
+      betBox.querySelectorAll('[data-bac-bet]').forEach((x) => x.classList.toggle('active', x === b));
+    });
+  });
+
+  btn.addEventListener('click', async () => {
+    const value = stake.value();
+    if (value === null) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Dealing…';
+    try {
+      const r = await api('/api/games/vip-baccarat/play', { method: 'POST', body: { stake: value, bet } });
+      playerCards.innerHTML = r.playerCards.map((c) => cardHtml(c)).join('');
+      bankerCards.innerHTML = r.bankerCards.map((c) => cardHtml(c)).join('');
+      playerTotal.textContent = String(r.playerTotal);
+      bankerTotal.textContent = String(r.bankerTotal);
+      statusEl.textContent = `${r.outcome.toUpperCase()} wins · ${r.playerTotal} – ${r.bankerTotal}`;
+      resultEl.innerHTML = resultPanel(
+        r.win ? 'win' : 'loss',
+        r.win ? `You won ${money(r.payout)}` : `You lost ${money(value)}`,
+        `${r.choice} · ${r.win ? `${r.multiplier}x` : `result ${r.outcome}`}`,
+      );
+      history.unshift({
+        win: r.win,
+        label: `${r.choice} → ${r.outcome}`,
+        meta: `${r.playerTotal}–${r.bankerTotal}`,
+        payout: r.payout,
+      });
+      historyEl.innerHTML = historyList(history.slice(0, 8), 'No hands yet.');
+      setUser({ ...state.user, balance: r.balance });
+      refreshUser();
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('play')} Deal cards`;
+    }
+  });
+}
+
+/* ---------------------------------------------------------------- blackjack */
+
+const BJ_LABELS = { won: 'You won', lost: 'Dealer wins', push: 'Push', blackjack: 'Blackjack!' };
+
+function blackjackView(game) {
+  return `<div class="game-layout">
+    <section class="card game-stage">
+      <div class="table-felt bj-table">
+        <div class="table-side">
+          <div class="table-side-head"><span>Dealer</span><strong id="bj-dealer-total">–</strong></div>
+          <div class="card-row" id="bj-dealer-cards">${cardHtml(null)}${cardHtml(null)}</div>
+        </div>
+        <div class="table-side">
+          <div class="table-side-head"><span>Your hand</span><strong id="bj-player-total">–</strong></div>
+          <div class="card-row" id="bj-player-cards"></div>
+        </div>
+      </div>
+      <div class="stage-status" id="bj-status">Set your stake and deal a hand.</div>
+      <div id="bj-result"></div>
+    </section>
+    <aside class="card game-controls">
+      <div class="card-head"><h3>${icon('wallet')} Your hand</h3></div>
+      ${stakeField(game)}
+      <button class="btn btn-gold btn-block" id="bj-deal">${icon('play')} Deal a hand</button>
+      <div class="btn-row mt-8 bj-actions">
+        <button class="btn btn-ghost" id="bj-hit" disabled>Hit</button>
+        <button class="btn btn-ghost" id="bj-stand" disabled>Stand</button>
+        <button class="btn btn-outline-gold" id="bj-double" disabled>Double</button>
+      </div>
+      <div class="pill-note mt-16">${icon('info')}<div>Blackjack pays 3:2 · dealer stands on 17 · double on your first two cards.</div></div>
+      <div class="divider"></div>
+      <div id="bj-history">${historyList([], 'No hands yet.')}</div>
+    </aside>
+  </div>
+  ${howTo(game)}`;
+}
+
+function mountBlackjack(root, game) {
+  const stake = bindStake(root, game);
+  const els = {
+    dealerCards: root.querySelector('#bj-dealer-cards'),
+    playerCards: root.querySelector('#bj-player-cards'),
+    dealerTotal: root.querySelector('#bj-dealer-total'),
+    playerTotal: root.querySelector('#bj-player-total'),
+    status: root.querySelector('#bj-status'),
+    result: root.querySelector('#bj-result'),
+    history: root.querySelector('#bj-history'),
+    deal: root.querySelector('#bj-deal'),
+    hit: root.querySelector('#bj-hit'),
+    stand: root.querySelector('#bj-stand'),
+    double: root.querySelector('#bj-double'),
+  };
+  const history = [];
+  let roundId = null;
+  let busy = false;
+
+  function paint(r) {
+    roundId = r.status === 'player' ? r.id : null;
+    els.dealerCards.innerHTML = r.dealerCards.map((c) => cardHtml(c)).join('');
+    els.playerCards.innerHTML = r.playerCards.map((c) => cardHtml(c)).join('');
+    els.dealerTotal.textContent = r.dealerTotal == null ? '–' : String(r.dealerTotal);
+    els.playerTotal.textContent = `${r.playerTotal}${r.playerSoft ? ' soft' : ''}`;
+    els.hit.disabled = !r.canHit || busy;
+    els.stand.disabled = !r.canHit || busy;
+    els.double.disabled = !r.canDouble || busy;
+    els.deal.disabled = busy || r.status === 'player';
+    if (r.status === 'player') {
+      els.status.textContent = `Your total is ${r.playerTotal}. Hit, stand or double.`;
+      els.result.innerHTML = '';
+      return;
+    }
+    const label = BJ_LABELS[r.status] || 'Hand settled';
+    els.status.textContent = `${label} · ${r.detail}`;
+    els.result.innerHTML = resultPanel(
+      r.payout > r.stake ? 'win' : r.payout > 0 ? 'info' : 'loss',
+      `${label} ${r.payout ? money(r.payout) : money(r.stake)}`,
+      `${r.detail} · stake ${money(r.stake)}`,
+    );
+    history.unshift({
+      win: r.payout > r.stake,
+      label,
+      meta: `${r.playerTotal} vs ${r.dealerTotal == null ? '–' : r.dealerTotal}`,
+      payout: r.payout,
+    });
+    els.history.innerHTML = historyList(history.slice(0, 8), 'No hands yet.');
+    setUser({ ...state.user, balance: r.balance });
+    refreshUser();
+  }
+
+  function idle() {
+    els.hit.disabled = true;
+    els.stand.disabled = true;
+    els.double.disabled = true;
+    els.deal.disabled = false;
+  }
+
+  async function act(path) {
+    if (busy || !roundId) return;
+    busy = true;
+    try {
+      paint(await api(path, { method: 'POST' }));
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      busy = false;
+      if (roundId) {
+        els.hit.disabled = false;
+        els.stand.disabled = false;
+        els.deal.disabled = true;
+      } else {
+        idle();
+      }
+    }
+  }
+
+  els.deal.addEventListener('click', async () => {
+    const value = stake.value();
+    if (value === null) return;
+    busy = true;
+    els.deal.disabled = true;
+    els.deal.innerHTML = '<span class="loader"></span> Dealing…';
+    try {
+      paint(await api('/api/games/blackjack/start', { method: 'POST', body: { stake: value } }));
+    } catch (err) {
+      toast(err.message, 'error');
+      idle();
+    } finally {
+      busy = false;
+      els.deal.innerHTML = `${icon('play')} Deal a hand`;
+      if (roundId) {
+        els.hit.disabled = false;
+        els.stand.disabled = false;
+        els.deal.disabled = true;
+      }
+    }
+  });
+
+  els.hit.addEventListener('click', () => act(`/api/games/blackjack/${roundId}/hit`));
+  els.stand.addEventListener('click', () => act(`/api/games/blackjack/${roundId}/stand`));
+  els.double.addEventListener('click', () => act(`/api/games/blackjack/${roundId}/double`));
+}
+
 /* ------------------------------------------------------------------ exports */
 
 const MOUNTS = {
@@ -672,6 +921,8 @@ const MOUNTS = {
   'royal-coin': { view: coinView, mount: mountCoin },
   'golden-wheel': { view: wheelView, mount: mountWheel },
   'lucky-nine': { view: luckyView, mount: mountLucky },
+  'vip-baccarat': { view: baccaratView, mount: mountBaccarat },
+  'vip-blackjack': { view: blackjackView, mount: mountBlackjack },
 };
 
 export function renderGamePage(slug) {

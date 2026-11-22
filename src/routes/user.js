@@ -125,6 +125,43 @@ router.post('/games/:slug/play', requireAuth, (req, res) => {
   res.json(result);
 });
 
+/* ----------------------------------------------------------- blackjack table */
+
+router.post('/games/blackjack/start', requireAuth, (req, res) => {
+  res.json(games.startBlackjack(req.user, req.body || {}));
+});
+
+router.get('/games/blackjack/:roundId', requireAuth, (req, res) => {
+  res.json(games.blackjackRoundView(req.user, req.params.roundId));
+});
+
+for (const action of ['hit', 'stand', 'double']) {
+  router.post(`/games/blackjack/:roundId/${action}`, requireAuth, (req, res) => {
+    res.json(games.blackjackAction(req.user, req.params.roundId, action));
+  });
+}
+
+/* ------------------------------------------------------------------ invites */
+
+router.get('/me/referral', requireAuth, (req, res) => {
+  const user = req.user;
+  const publicInfo = store.publicUser(user);
+  const invited = store.db().users.filter((u) => u.referredBy === user.id);
+  const earned = store
+    .db()
+    .transactions.filter((t) => t.userId === user.id && t.type === 'referral' && t.status === 'approved')
+    .reduce((sum, t) => sum + t.amount, 0);
+  const origin = `${req.protocol}://${req.get('host')}`;
+  res.json({
+    code: publicInfo.referralCode,
+    link: `${origin}/?ref=${encodeURIComponent(publicInfo.referralCode)}`,
+    invited: invited.length,
+    earned: Math.round(earned * 100) / 100,
+    bonus: Number(store.db().settings.referralBonus ?? LIMITS.referralBonus),
+    recent: invited.slice(-5).map((u) => ({ name: u.name, at: u.createdAt })),
+  });
+});
+
 /* ---------------------------------------------------------------- my profile */
 
 router.get('/me/overview', requireAuth, (req, res) => {
