@@ -702,3 +702,42 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* payment details + copy rows (deposit page) */
+.method-account {
+  display: block;
+  margin-top: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--gold, #d4af37);
+}
+
+.pay-details {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.copy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.copy-row .copy-value {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: #fff;
+  word-break: break-all;
+}
+
+.copy-row .link-btn {
+  flex-shrink: 0;
+}

@@ -153,6 +153,16 @@ async function main() {
   check(limits.withdrawMax === 50000, `withdrawal maximum should be 50000, got ${limits.withdrawMax}`);
   check(limits.depositWindowMs === 19 * 60 * 1000, 'deposit window should be 19 minutes');
   check(Array.isArray(config.data.depositMethods) && config.data.depositMethods.length >= 3, 'deposit methods expected');
+  const telebirrMethod = config.data.depositMethods.find((m) => m.id === 'telebirr');
+  check(
+    telebirrMethod && telebirrMethod.account === '0964050295',
+    `telebirr account should be 0964050295, got ${telebirrMethod && telebirrMethod.account}`,
+  );
+  const cbeMethod = config.data.depositMethods.find((m) => m.id === 'bank');
+  check(
+    cbeMethod && cbeMethod.account === '1000642419928',
+    `CBE account should be 1000642419928, got ${cbeMethod && cbeMethod.account}`,
+  );
   ok('config exposes 100/10,000 deposit and 500/50,000 withdrawal limits with a 19-minute window');
 
   // --- games ---------------------------------------------------------------
