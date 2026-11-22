@@ -591,9 +591,6 @@ function play(user, slug, payload) {
       return playBaccarat(user, payload);
     case 'dice-duel':
       return playDice(user, payload);
-  switch (slug) {
-    case 'dice-duel':
-      return playDice(user, payload);
     case 'royal-coin':
       return playCoin(user, payload);
     case 'golden-wheel':
