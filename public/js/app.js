@@ -503,6 +503,25 @@ function txRows(items) {
   });
 }
 
+function inviteCard(ref) {
+  if (!ref || !ref.link) return '';
+  const share = encodeURIComponent(`Join me on ARADA BETTING. Use my invite code ${ref.code}: ${ref.link}`);
+  return `<div class="card invite-card mb-16">
+    <div class="invite-main">
+      <div class="guest-icon">${icon('gift')}</div>
+      <div>
+        <h3>Invite friends · earn ${money(ref.bonus, 0)} each</h3>
+        <p class="tiny muted">Share your personal link. When a friend registers with your code you both receive ${money(ref.bonus, 0)}. Invited: <strong>${Number(ref.invited) || 0}</strong> · Earned: <strong class="gold">${money(ref.earned)}</strong></p>
+      </div>
+    </div>
+    <div class="invite-actions">
+      <input class="input" readonly value="${escapeHtml(ref.link)}" data-invite-link aria-label="Your invite link" />
+      <button type="button" class="btn btn-gold btn-sm" data-invite-copy="${escapeHtml(ref.link)}">${icon('copy')} Copy link</button>
+      <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${share}">${icon('users')} Share</a>
+    </div>
+  </div>`;
+}
+
 async function dashboardPage() {
   if (!state.user) {
     return authGate('Your ARADA dashboard', 'Sign in to see your profile, virtual balance, game history and transactions.');
