@@ -71,7 +71,7 @@ function debit(user, stake) {
     type: 'bet',
     amount: -stake,
     status: 'approved',
-    note: 'Demo wager',
+    note: 'Wager',
   });
 }
 
