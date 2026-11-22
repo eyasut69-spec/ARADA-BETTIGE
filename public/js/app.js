@@ -62,12 +62,13 @@ function dataTable(headers, rows, empty) {
   </table></div>`;
 }
 
-function authGate(title, sub) {
+function authGate(title, sub, extra = '') {
   return `<section class="section narrow">
     <div class="card auth-gate">
       <div class="guest-icon">${icon('lock')}</div>
       <h2>${escapeHtml(title)}</h2>
       <p class="muted">${escapeHtml(sub)}</p>
+      ${extra}
       <div class="btn-row">
         <button class="btn btn-gold" data-auth="login">${icon('lock')} Sign in</button>
         <button class="btn btn-outline-gold" data-auth="register">${icon('user')} Create account</button>
@@ -336,7 +337,14 @@ function depositRows(deposits) {
 
 async function depositPage() {
   if (!state.user) {
-    return authGate('Sign in to deposit demo credits', 'Deposits are virtual requests reviewed by the operator. No real payment is processed.');
+    return authGate(
+      'Sign in to deposit demo credits',
+      'Deposits are virtual requests reviewed by the operator. No real payment is processed.',
+      `<div class="stat-grid mb-16">
+        ${stat('Minimum deposit', money(limit('depositMin', 100), 0))}
+        ${stat('Maximum deposit', money(limit('depositMax', 10000), 0))}
+      </div>`,
+    );
   }
   const { deposits } = await api('/api/deposits');
   const methods = state.config?.depositMethods || [];
@@ -400,7 +408,14 @@ function withdrawalRows(items) {
 
 async function withdrawPage() {
   if (!state.user) {
-    return authGate('Sign in to request a demo withdrawal', 'Withdrawals are virtual requests reviewed by the operator.');
+    return authGate(
+      'Sign in to request a demo withdrawal',
+      'Withdrawals are virtual requests reviewed by the operator. No real money is transferred.',
+      `<div class="stat-grid mb-16">
+        ${stat('Minimum withdrawal', money(limit('withdrawMin', 500), 0))}
+        ${stat('Maximum withdrawal', money(limit('withdrawMax', 50000), 0))}
+      </div>`,
+    );
   }
   const { withdrawals } = await api('/api/withdrawals');
   const methods = state.config?.withdrawMethods || [];
