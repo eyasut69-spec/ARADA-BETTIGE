@@ -214,7 +214,7 @@ async function homePage() {
         <a class="btn btn-gold btn-block" href="#/deposit">${icon('wallet')} Open deposit page</a>
       </div>
       <div class="card">
-        <div class="card-head"><h3 class="card-title">${icon('banknote')} Withdrawal limits</h3><span class="badge badge-gold">Demo</span></div>
+        <div class="card-head"><h3 class="card-title">${icon('banknote')} Withdrawal limits</h3><span class="badge badge-gold">ETB</span></div>
         <div class="balance-line"><strong>${money(wMin, 0)}</strong><span class="muted">minimum</span></div>
         <div class="balance-line"><strong>${money(wMax, 0)}</strong><span class="muted">maximum</span></div>
         <p class="small muted">Withdrawal requests are reviewed by our team and paid out to the Telebirr or CBE account you enter. Minimum 500 ETB, maximum 50,000 ETB per request.</p>
@@ -755,7 +755,7 @@ function adminOverviewHtml(overview) {
 
   return `<div class="stat-grid mb-16">
       ${stat('Users', String(t.users), `${t.newUsers24h} new in 24h`)}
-      ${stat('Virtual credits in play', money(t.balance))}
+      ${stat('Credits in play', money(t.balance))}
       ${stat('Total wagered', money(t.wagered))}
       ${stat('Paid out', money(t.paidOut))}
       ${stat('House profit', money(t.houseProfit))}
@@ -1074,7 +1074,7 @@ async function adminPage() {
                <div class="field"><label for="adjust-amount">Amount (ETB)</label>
                  <input class="input" id="adjust-amount" type="number" step="0.01" placeholder="e.g. 1000 or -500" /></div>
                <div class="field"><label for="adjust-note">Note</label>
-                 <input class="input" id="adjust-note" type="text" maxlength="160" placeholder="Manual demo adjustment" /></div>
+                 <input class="input" id="adjust-note" type="text" maxlength="160" placeholder="Manual balance adjustment" /></div>
                <div class="modal-actions">
                  <button class="btn btn-ghost" data-close>Cancel</button>
                  <button class="btn btn-gold" id="adjust-save">${icon('check')} Apply adjustment</button>
@@ -1156,17 +1156,17 @@ async function adminPage() {
 
 function promotionsPage() {
   const bonus = money(limit('welcomeBonus', 1000));
-  return `${pageHead('Promotions', 'Demo-only rewards to explore the platform.')}
+  return `${pageHead('Promotions', 'Rewards for players who fund their wallet.')}
   <div class="grid-3">
     <div class="card"><div class="guest-icon">${icon('gift')}</div><h3>Welcome credits</h3><p class="muted small">Every new account starts with ${bonus} in credits. Guest wallets receive the same amount.</p><a class="btn btn-gold btn-block" href="#/games">Play now</a></div>
-    <div class="card"><div class="guest-icon">${icon('refresh')}</div><h3>Cashier practice</h3><p class="muted small">Run the full deposit and withdrawal flow with screenshots and operator review — all virtual.</p><a class="btn btn-outline-gold btn-block" href="#/deposit">Open cashier</a></div>
+    <div class="card"><div class="guest-icon">${icon('refresh')}</div><h3>Cashier practice</h3><p class="muted small">Run the full deposit and withdrawal flow with screenshots and operator review — all in ETB.</p><a class="btn btn-outline-gold btn-block" href="#/deposit">Open cashier</a></div>
     <div class="card"><div class="guest-icon">${icon('shield')}</div><h3>Responsible play</h3><p class="muted small">Set your own limits, take breaks and only play with money you can afford to lose.</p><a class="btn btn-ghost btn-block" href="#/responsible">Read guidance</a></div>
   </div>`;
 }
 
 function supportPage() {
   const faqs = [
-    ['Is this real betting?', 'No. ARADA BETTING is a demonstration platform. All credits are virtual and have no cash value, and no payment provider is ever contacted.'],
+    ['How do I fund my account?', 'Choose Telebirr or CBE, transfer to the account shown on the deposit page, then upload your payment screenshot within 19 minutes for operator approval.'],
     ['Do I need an OTP to sign in?', 'No. Sign in with your phone number and password. A recovery code handles forgotten passwords without any SMS step.'],
     ['How do deposits work?', 'Create a request between 100 and 10,000 ETB, upload a payment screenshot within the 19-minute window, and the operator approves or rejects it.'],
     ['What are the withdrawal limits?', 'Minimum 500 ETB and maximum 50,000 ETB per demo request, and the amount must be covered by your balance.'],
