@@ -1,5 +1,7 @@
 'use strict';
 
+import { gameLogo } from './logos.js';
+
 /**
  * ARADA BETTING — client router and pages.
  * Every view is rendered from real API data; nothing here is a dead link.
@@ -134,10 +136,9 @@ function field(label, inputHtml, hint = '') {
 
 function gameCard(game) {
   const accent = /^#[0-9a-f]{3,8}$/i.test(String(game.accent || '')) ? game.accent : '#d4af37';
-  const art = ['golden-crash', 'golden-wheel', 'lucky-nine'].includes(game.slug) ? 'sparkles' : 'games';
   return `<a class="game-card" href="#/games/${game.slug}" style="--accent:${accent}">
     <div class="game-card-art">
-      <span class="game-card-icon">${icon(art)}</span>
+      ${gameLogo(game.slug, 'game-card-logo')}
       ${game.enabled === false ? '<span class="badge badge-off">Paused</span>' : `<span class="badge badge-live">${escapeHtml(game.badge || 'Live')}</span>`}
     </div>
     <div class="game-card-body">
@@ -152,7 +153,7 @@ function gameCard(game) {
 }
 
 async function homePage() {
-  const games = state.games.slice(0, 5);
+  const games = state.games.slice(0, 6);
   const user = state.user;
   const dMin = limit('depositMin', 100);
   const dMax = limit('depositMax', 10000);
@@ -162,7 +163,7 @@ async function homePage() {
   return `
   <section class="hero">
     <div class="hero-inner">
-      <span class="badge badge-gold">${icon('shield')} Virtual credits only · 18+</span>
+      <span class="badge badge-gold">${icon('shield')} 18+ · Play responsibly</span>
       <h1>Welcome to <span class="gold">ARADA</span><br />Betting.</h1>
       <p class="lead">A premium betting floor in black, gold and white. Browse every table, play with ETB credits, and top up through Telebirr or Commercial Bank of Ethiopia — every payment is verified by our team.</p>
       <div class="btn-row">
@@ -170,7 +171,7 @@ async function homePage() {
         ${user ? `<a class="btn btn-outline-gold btn-lg" href="#/dashboard">${icon('grid')} My dashboard</a>` : `<button class="btn btn-outline-gold btn-lg" data-guest>${icon('sparkles')} Play instantly</button>`}
       </div>
       <div class="hero-stats">
-        ${stat('Games', String(state.games.length), 'Instant demo play')}
+        ${stat('Games', String(state.games.length), 'Instant play')}
         ${stat('Deposit range', `${money(dMin, 0)} – ${money(dMax, 0)}`)}
         ${stat('Withdrawal range', `${money(wMin, 0)} – ${money(wMax, 0)}`)}
       </div>
@@ -178,22 +179,22 @@ async function homePage() {
   </section>
 
   <section class="section">
-    ${pageHead('Featured games', 'Five instant games with server-side results and a full audit trail.', `<a class="btn btn-ghost btn-sm" href="#/games">All games ${icon('games')}</a>`)}
+    ${pageHead('Featured games', 'Every table, instant game and casino classic — server-side results and a full audit trail.', `<a class="btn btn-ghost btn-sm" href="#/games">All games ${icon('games')}</a>`)}
     <div class="game-grid">${games.map(gameCard).join('')}</div>
   </section>
 
   <section class="section">
-    ${pageHead('How the demo works', 'Everything is virtual, reviewed and recorded.')}
+    ${pageHead('How ARADA works', 'Register in seconds, play instantly, cash out through the cashier.')}
     <div class="grid-3">
       <div class="how-card">
         <div class="guest-icon">${icon('user')}</div>
         <h3>1 · Open a wallet</h3>
-        <p class="muted small">Register with a phone number and password, or start a guest wallet instantly. Every new account receives ${money(limit('welcomeBonus', 1000))} in demo credits.</p>
+        <p class="muted small">Register with a phone number and password, or start a guest wallet instantly. Every new account receives ${money(limit('welcomeBonus', 1000))} in credits.</p>
       </div>
       <div class="how-card">
         <div class="guest-icon">${icon('games')}</div>
         <h3>2 · Play the tables</h3>
-        <p class="muted small">Crash, dice, coin, wheel and lucky digits. Stakes are virtual and every round lands in your game history with its multiplier and payout.</p>
+        <p class="muted small">Crash, dice, coin, wheel, lucky digits, baccarat and blackjack. Every round lands in your game history with its multiplier and payout.</p>
       </div>
       <div class="how-card">
         <div class="guest-icon">${icon('wallet')}</div>
@@ -506,10 +507,11 @@ async function dashboardPage() {
   if (!state.user) {
     return authGate('Your ARADA dashboard', 'Sign in to see your profile, virtual balance, game history and transactions.');
   }
-  const [overview, betsData, txData] = await Promise.all([
+  const [overview, betsData, txData, refData] = await Promise.all([
     api('/api/me/overview'),
     api('/api/me/bets?limit=100'),
     api('/api/me/transactions?limit=100'),
+    api('/api/me/referral').catch(() => null),
   ]);
   setUser(overview.user);
   const u = overview.user;
@@ -536,7 +538,7 @@ async function dashboardPage() {
         <div class="avatar">${escapeHtml(initials)}</div>
         <div>
           <h2>${escapeHtml(u.name)}</h2>
-          <p class="tiny muted">${u.phone ? escapeHtml(u.phone) : 'Guest demo wallet'} · Member since ${fmtDate(u.createdAt, { withTime: false })}</p>
+          <p class="tiny muted">${u.phone ? escapeHtml(u.phone) : 'Guest wallet'} · Member since ${fmtDate(u.createdAt, { withTime: false })}</p>
           <div class="chip-row mt-8">
             <span class="badge badge-gold">${escapeHtml(u.role)}</span>
             <span class="badge ${u.status === 'active' ? 'badge-live' : 'badge-off'}">${escapeHtml(u.status)}</span>
@@ -544,9 +546,9 @@ async function dashboardPage() {
           </div>
         </div>
         <div class="profile-balance">
-          <span class="tiny muted">Virtual balance</span>
+          <span class="tiny muted">Available balance</span>
           <strong class="gold">${money(u.balance)}</strong>
-          <span class="tiny muted">Demo credits only</span>
+          <span class="tiny muted">ETB · ready to play</span>
         </div>
       </div>
     </section>
@@ -563,6 +565,7 @@ async function dashboardPage() {
     </div>
     <div id="dash-panel">
       <div class="tab-panel" data-panel="overview">
+        ${inviteCard(refData)}
         <div class="grid-2">
           <div class="card">
             <div class="card-head"><h3 class="card-title">${icon('games')} Recent game history</h3><a class="link-btn" href="#/games">Play</a></div>
@@ -1449,6 +1452,22 @@ async function render() {
 
 async function boot() {
   installGlobalHandlers();
+  const refParam = new URLSearchParams(window.location.search).get('ref');
+  if (refParam) {
+    state.pendingReferral = refParam.trim().toUpperCase();
+    toast(`Invite code ${state.pendingReferral} saved — it will be applied when you register.`, 'info');
+  }
+  document.addEventListener('click', async (e) => {
+    const copyBtn = e.target.closest('[data-invite-copy]');
+    if (!copyBtn) return;
+    const link = copyBtn.getAttribute('data-invite-copy') || '';
+    try {
+      await navigator.clipboard.writeText(link);
+      toast('Invite link copied.', 'success');
+    } catch (err) {
+      toast('Copy failed — select the link and copy it manually.', 'error');
+    }
+  });
   setAuthListener(() => {
     render();
   });
