@@ -169,11 +169,15 @@ async function main() {
   const gamesRes = await guest.get('/api/games');
   check(gamesRes.status === 200, 'games should return 200');
   const games = gamesRes.data.games;
-  check(Array.isArray(games) && games.length === 5, `expected 5 games, got ${games?.length}`);
-  for (const slug of ['golden-crash', 'dice-duel', 'royal-coin', 'golden-wheel', 'lucky-nine']) {
+  check(Array.isArray(games) && games.length === 7, `expected 7 games, got ${games?.length}`);
+  for (const slug of ['golden-crash', 'dice-duel', 'royal-coin', 'golden-wheel', 'lucky-nine', 'vip-baccarat', 'vip-blackjack']) {
     check(games.some((g) => g.slug === slug), `game ${slug} should be listed`);
   }
-  ok('all five demo games are listed publicly');
+  check(
+    games.every((g) => g.name && g.short && g.accent),
+    'every game should expose a name, tagline and logo accent',
+  );
+  ok('all seven games, including baccarat and blackjack, are listed publicly');
 
   // --- guest wallet + play -------------------------------------------------
   const guestRes = await guest.post('/api/auth/guest');
@@ -192,6 +196,25 @@ async function main() {
   check(guestMe.data.stats.bets === 1, 'guest bet should be recorded in history');
   ok('guest game history records the round');
 
+  // --- casino tables -------------------------------------------------------
+  const baccarat = await guest.post('/api/games/vip-baccarat/play', { stake: 50, bet: 'player' });
+  check(baccarat.status === 200, `baccarat should play, got ${baccarat.status}: ${JSON.stringify(baccarat.data)}`);
+  check(baccarat.data.playerCards.length >= 2, 'baccarat should deal a player hand');
+  check(baccarat.data.bankerCards.length >= 2, 'baccarat should deal a banker hand');
+  check(['player', 'banker', 'tie'].includes(baccarat.data.outcome), 'baccarat should report the outcome');
+  ok('baccarat deals and settles a real round on the server');
+
+  const bjStart = await guest.post('/api/games/blackjack/start', { stake: 50 });
+  check(bjStart.status === 200, `blackjack should start, got ${bjStart.status}: ${JSON.stringify(bjStart.data)}`);
+  check(typeof bjStart.data.id === 'string' && bjStart.data.playerCards.length === 2, 'blackjack should deal two cards');
+  const bjId = bjStart.data.id;
+  const bjEnd = await guest.post(`/api/games/blackjack/${bjId}/stand`);
+  check(bjEnd.status === 200, `blackjack stand should succeed, got ${bjEnd.status}: ${JSON.stringify(bjEnd.data)}`);
+  check(['won', 'lost', 'push', 'blackjack'].includes(bjEnd.data.status), `unexpected blackjack status ${bjEnd.data.status}`);
+  const bjReplay = await guest.post(`/api/games/blackjack/${bjId}/hit`);
+  check(bjReplay.status === 409, 'a settled blackjack hand cannot be played again');
+  ok('blackjack deals, stands and locks settled hands');
+
   // --- registration --------------------------------------------------------
   const phone = '0912345678';
   const password = 'Player@1234';
@@ -206,6 +229,24 @@ async function main() {
   check(typeof reg.data.recoveryCode === 'string' && reg.data.recoveryCode.replace(/-/g, '').length === 16, 'recovery code expected');
   const recoveryCode = reg.data.recoveryCode;
   ok('phone + password registration returns a 16-character recovery code');
+
+  // --- invite link ---------------------------------------------------------
+  const invite = await player.get('/api/me/referral');
+  check(invite.status === 200, `invite link should load, got ${invite.status}`);
+  check(/^ARADA[A-Z0-9]{4}$/.test(invite.data.code), `unexpected invite code: ${invite.data.code}`);
+  check(invite.data.link.includes(`?ref=${invite.data.code}`), 'invite link should carry the code');
+  const invitedReg = await client().post('/api/auth/register', {
+    phone: '0912345671',
+    password,
+    name: 'Invited Friend',
+    acceptedTerms: true,
+    referral: invite.data.code,
+  });
+  check(invitedReg.status === 201, `invited registration should succeed, got ${invitedReg.status}: ${JSON.stringify(invitedReg.data)}`);
+  const inviteAfter = await player.get('/api/me/referral');
+  check(inviteAfter.data.invited === 1, `inviter should see one invited friend, got ${inviteAfter.data.invited}`);
+  check(inviteAfter.data.earned >= 100, `inviter should earn the referral bonus, got ${inviteAfter.data.earned}`);
+  ok('invite links register friends and pay the referral bonus to both sides');
 
   const noTerms = await client().post('/api/auth/register', {
     phone: '0912345679',
