@@ -76,7 +76,10 @@ function newSessionToken() {
 
 /** Crypto-strong float in [0, 1). */
 function secureRandom() {
-  return crypto.randomInt(0, 2 ** 48) / 2 ** 48;
+  // 6 random bytes give 48 bits of entropy; read them directly because
+  // crypto.randomInt() rejects a span of 2**48 (its maximum is 2**48 - 1).
+  const buf = crypto.randomBytes(6);
+  return buf.readUIntBE(0, 6) / 2 ** 48;
 }
 
 /** Crypto-strong integer in [0, max). */
