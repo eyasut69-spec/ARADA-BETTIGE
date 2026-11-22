@@ -74,7 +74,7 @@ function authGate(title, sub, extra = '') {
       <div class="btn-row">
         <button class="btn btn-gold" data-auth="login">${icon('lock')} Sign in</button>
         <button class="btn btn-outline-gold" data-auth="register">${icon('user')} Create account</button>
-        <button class="btn btn-ghost" data-guest>${icon('sparkles')} Guest demo wallet</button>
+        <button class="btn btn-ghost" data-guest>${icon('sparkles')} Guest wallet</button>
       </div>
       <p class="tiny muted">No OTP is required for normal sign-in.</p>
     </div>
@@ -91,7 +91,7 @@ function bindGuest(rootEl) {
       try {
         const data = await api('/api/auth/guest', { method: 'POST' });
         setUser(data.user);
-        toast(`Guest wallet ready with ${money(data.user.balance)} demo credits.`, 'success');
+        toast(`Guest wallet ready with ${money(data.user.balance)} credits.`, 'success');
         mountChrome();
         await render();
       } catch (err) {
@@ -243,7 +243,7 @@ async function gamesPage() {
   const categories = ['All', ...Array.from(new Set(state.games.map((g) => g.category).filter(Boolean)))];
   return `${pageHead(
     'The golden floor',
-    'Browse every demo table. Results are generated on the server and recorded in your history.',
+    'Browse every table. Results are generated on the server and recorded in your history.',
     `<a class="btn btn-ghost btn-sm" href="#/dashboard">${icon('grid')} My dashboard</a>`,
   )}
   <div class="filter-row">
@@ -354,7 +354,7 @@ function depositRows(deposits) {
 async function depositPage() {
   if (!state.user) {
     return authGate(
-      'Sign in to deposit demo credits',
+      'Sign in to deposit credits',
       'Sign in to see the Telebirr and CBE accounts, then upload your payment proof.',
       `<div class="stat-grid mb-16">
         ${stat('Minimum deposit', money(limit('depositMin', 100), 0))}
@@ -408,7 +408,7 @@ async function depositPage() {
 
   <section class="section">
     ${pageHead('My deposit requests', 'Pending, approved and rejected deposits.')}
-    <div class="card">${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(deposits), 'No demo deposits yet.')}</div>
+    <div class="card">${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(deposits), 'No deposits yet.')}</div>
   </section>`;
 }
 
@@ -428,7 +428,7 @@ function withdrawalRows(items) {
 async function withdrawPage() {
   if (!state.user) {
     return authGate(
-      'Sign in to request a demo withdrawal',
+      'Sign in to request a withdrawal',
       'Withdrawals are reviewed by our team and paid out to your Telebirr or CBE account.',
       `<div class="stat-grid mb-16">
         ${stat('Minimum withdrawal', money(limit('withdrawMin', 500), 0))}
@@ -467,15 +467,15 @@ async function withdrawPage() {
       <ol class="steps">
         <li>Minimum request: <strong>${money(min, 0)}</strong>.</li>
         <li>Maximum request: <strong>${money(max, 0)}</strong>.</li>
-        <li>The amount must be covered by your virtual balance.</li>
+        <li>The amount must be covered by your balance.</li>
         <li>Approved requests are paid out to your account; rejected requests return the balance.</li>
       </ol>
       <div class="pill-note">${icon('alert')}<div>Payouts are manual. Make sure the account name and number you enter are correct. 18+ only.</div></div>
     </div>
   </div>
   <section class="section">
-    ${pageHead('My withdrawal requests', 'Pending, approved and rejected demo withdrawals.')}
-    <div class="card">${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(withdrawals), 'No demo withdrawals yet.')}</div>
+    ${pageHead('My withdrawal requests', 'Pending, approved and rejected withdrawals.')}
+    <div class="card">${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(withdrawals), 'No withdrawals yet.')}</div>
   </section>`;
 }
 
@@ -524,7 +524,7 @@ function inviteCard(ref) {
 
 async function dashboardPage() {
   if (!state.user) {
-    return authGate('Your ARADA dashboard', 'Sign in to see your profile, virtual balance, game history and transactions.');
+    return authGate('Your ARADA dashboard', 'Sign in to see your profile, balance, game history and transactions.');
   }
   const [overview, betsData, txData, refData] = await Promise.all([
     api('/api/me/overview'),
@@ -549,7 +549,7 @@ async function dashboardPage() {
   return {
     html: `${pageHead(
       'My dashboard',
-      'Profile, virtual balance, game history and the full transaction ledger.',
+      'Profile, balance, game history and the full transaction ledger.',
       `<a class="btn btn-gold btn-sm" href="#/deposit">${icon('wallet')} Deposit</a><a class="btn btn-ghost btn-sm" href="#/withdraw">${icon('banknote')} Withdraw</a>`,
     )}
     <section class="card mb-16">
@@ -598,11 +598,11 @@ async function dashboardPage() {
         <div class="grid-2 mt-16">
           <div class="card">
             <div class="card-head"><h3 class="card-title">${icon('wallet')} Latest deposits</h3><a class="link-btn" href="#/deposit">Deposit</a></div>
-            ${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(overview.recentDeposits || []), 'No demo deposits yet.')}
+            ${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(overview.recentDeposits || []), 'No deposits yet.')}
           </div>
           <div class="card">
             <div class="card-head"><h3 class="card-title">${icon('banknote')} Latest withdrawals</h3><a class="link-btn" href="#/withdraw">Withdraw</a></div>
-            ${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(overview.recentWithdrawals || []), 'No demo withdrawals yet.')}
+            ${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(overview.recentWithdrawals || []), 'No withdrawals yet.')}
           </div>
         </div>
       </div>
@@ -613,10 +613,10 @@ async function dashboardPage() {
         <div class="card">${dataTable(['Type', 'Amount', 'Status', 'When'], txRows(txData.transactions || []), 'No transactions yet.')}</div>
       </div>
       <div class="tab-panel" data-panel="deposits" hidden>
-        <div class="card">${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(overview.recentDeposits || []), 'No demo deposits yet.')}</div>
+        <div class="card">${dataTable(['Amount', 'Method', 'Status', 'Proof window', 'Screenshot', 'Actions'], depositRows(overview.recentDeposits || []), 'No deposits yet.')}</div>
       </div>
       <div class="tab-panel" data-panel="withdrawals" hidden>
-        <div class="card">${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(overview.recentWithdrawals || []), 'No demo withdrawals yet.')}</div>
+        <div class="card">${dataTable(['Amount', 'Method', 'Destination', 'Status', 'Operator note', 'Requested'], withdrawalRows(overview.recentWithdrawals || []), 'No withdrawals yet.')}</div>
       </div>
       <div class="tab-panel" data-panel="profile" hidden>
         <div class="grid-2">
@@ -769,11 +769,11 @@ function adminOverviewHtml(overview) {
     </div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-head"><h3 class="card-title">${icon('wallet')} Pending demo deposits</h3><span class="badge badge-gold">${t.depositPendingCount}</span></div>
+        <div class="card-head"><h3 class="card-title">${icon('wallet')} Pending deposits</h3><span class="badge badge-gold">${t.depositPendingCount}</span></div>
         ${dataTable(['Amount', 'Player', 'Method', 'Proof', 'Decision'], pendingDepositRows, 'No pending deposits.')}
       </div>
       <div class="card">
-        <div class="card-head"><h3 class="card-title">${icon('banknote')} Pending demo withdrawals</h3><span class="badge badge-gold">${t.withdrawalPendingCount}</span></div>
+        <div class="card-head"><h3 class="card-title">${icon('banknote')} Pending withdrawals</h3><span class="badge badge-gold">${t.withdrawalPendingCount}</span></div>
         ${dataTable(['Amount', 'Player', 'Method', 'Decision'], pendingWithdrawalRows, 'No pending withdrawals.')}
       </div>
     </div>
@@ -951,7 +951,7 @@ async function adminPage() {
       <h2>Admin access required</h2>
       <p class="muted">This account is a player account. Sign in with the operator account to open the admin dashboard.</p>
       <div class="btn-row"><a class="btn btn-gold" href="#/dashboard">${icon('grid')} My dashboard</a><a class="btn btn-ghost" href="#/games">${icon('games')} Games</a></div>
-      <p class="tiny muted">Demo operator: 0911000000 · Arada@Admin1</p>
+      <p class="tiny muted">Operator: 0911000000 · Arada@Admin1</p>
     </div></section>`;
   }
 
@@ -960,7 +960,7 @@ async function adminPage() {
   return {
     html: `${pageHead(
       'Admin dashboard',
-      'Manage demo users, balances, games, transactions and uploaded payment screenshots.',
+      'Manage users, balances, games, transactions and uploaded payment screenshots.',
       `<a class="btn btn-ghost btn-sm" href="#/dashboard">${icon('grid')} Player view</a>`,
     )}
     ${adminTabBar()}
@@ -1034,7 +1034,7 @@ async function adminPage() {
             const kind = 'deposits';
             const approve = action === 'approve-deposit';
             noteModal({
-              title: approve ? 'Approve demo deposit' : 'Reject demo deposit',
+              title: approve ? 'Approve deposit' : 'Reject deposit',
               label: approve ? 'Credit note (optional)' : 'Reason for rejection',
               confirmLabel: approve ? 'Approve & credit' : 'Reject request',
               async onConfirm(note) {
@@ -1049,7 +1049,7 @@ async function adminPage() {
           } else if (action === 'approve-withdrawal' || action === 'reject-withdrawal') {
             const approve = action === 'approve-withdrawal';
             noteModal({
-              title: approve ? 'Approve demo withdrawal' : 'Reject demo withdrawal',
+              title: approve ? 'Approve withdrawal' : 'Reject withdrawal',
               label: approve ? 'Payout note (optional)' : 'Reason for rejection',
               confirmLabel: approve ? 'Approve payout' : 'Reject request',
               async onConfirm(note) {
@@ -1158,7 +1158,7 @@ function promotionsPage() {
   const bonus = money(limit('welcomeBonus', 1000));
   return `${pageHead('Promotions', 'Demo-only rewards to explore the platform.')}
   <div class="grid-3">
-    <div class="card"><div class="guest-icon">${icon('gift')}</div><h3>Welcome credits</h3><p class="muted small">Every new account starts with ${bonus} in virtual credits. Guest wallets receive the same amount.</p><a class="btn btn-gold btn-block" href="#/games">Play now</a></div>
+    <div class="card"><div class="guest-icon">${icon('gift')}</div><h3>Welcome credits</h3><p class="muted small">Every new account starts with ${bonus} in credits. Guest wallets receive the same amount.</p><a class="btn btn-gold btn-block" href="#/games">Play now</a></div>
     <div class="card"><div class="guest-icon">${icon('refresh')}</div><h3>Cashier practice</h3><p class="muted small">Run the full deposit and withdrawal flow with screenshots and operator review — all virtual.</p><a class="btn btn-outline-gold btn-block" href="#/deposit">Open cashier</a></div>
     <div class="card"><div class="guest-icon">${icon('shield')}</div><h3>Responsible play</h3><p class="muted small">Set your own limits, take breaks and only play with money you can afford to lose.</p><a class="btn btn-ghost btn-block" href="#/responsible">Read guidance</a></div>
   </div>`;
@@ -1168,11 +1168,11 @@ function supportPage() {
   const faqs = [
     ['Is this real betting?', 'No. ARADA BETTING is a demonstration platform. All credits are virtual and have no cash value, and no payment provider is ever contacted.'],
     ['Do I need an OTP to sign in?', 'No. Sign in with your phone number and password. A recovery code handles forgotten passwords without any SMS step.'],
-    ['How do demo deposits work?', 'Create a request between 100 and 10,000 ETB, upload a payment screenshot within the 19-minute window, and the operator approves or rejects it.'],
-    ['What are the withdrawal limits?', 'Minimum 500 ETB and maximum 50,000 ETB per demo request, and the amount must be covered by your virtual balance.'],
+    ['How do deposits work?', 'Create a request between 100 and 10,000 ETB, upload a payment screenshot within the 19-minute window, and the operator approves or rejects it.'],
+    ['What are the withdrawal limits?', 'Minimum 500 ETB and maximum 50,000 ETB per demo request, and the amount must be covered by your balance.'],
     ['Can I play without registering?', 'Yes. Open a guest demo wallet instantly from the home page or any locked page, then convert it into a full account whenever you like.'],
   ];
-  return `${pageHead('Support & FAQ', 'Answers about the demo platform.')}
+  return `${pageHead('Support & FAQ', 'Answers about the platform.')}
   <div class="grid-2">
     <div class="card">
       ${faqs.map(([q, a]) => `<details class="faq"><summary>${escapeHtml(q)}</summary><p class="muted small">${escapeHtml(a)}</p></details>`).join('')}
@@ -1181,8 +1181,8 @@ function supportPage() {
       <div class="card-head"><h3 class="card-title">${icon('info')} Quick links</h3></div>
       <div class="mini-list">
         <a class="mini-item" href="#/games">${icon('games')} Browse games</a>
-        <a class="mini-item" href="#/deposit">${icon('wallet')} Deposit demo credits</a>
-        <a class="mini-item" href="#/withdraw">${icon('banknote')} Withdraw demo credits</a>
+        <a class="mini-item" href="#/deposit">${icon('wallet')} Deposit credits</a>
+        <a class="mini-item" href="#/withdraw">${icon('banknote')} Withdraw credits</a>
         <a class="mini-item" href="#/dashboard">${icon('grid')} My dashboard</a>
         <a class="mini-item" href="#/terms">${icon('shield')} Terms & demo rules</a>
       </div>
@@ -1198,7 +1198,7 @@ function responsiblePage() {
       <li>All credits are virtual and cannot be bought, sold or exchanged for money.</li>
       <li>Take regular breaks and treat every session as a product demonstration.</li>
       <li>If gambling affects your life, seek local support. This platform is 18+ only.</li>
-      <li>Operators can block demo accounts at any time to enforce safe use.</li>
+      <li>Operators can block accounts at any time to enforce safe use.</li>
     </ol>
     <div class="pill-note">${icon('shield')}<div>ARADA BETTING never processes real deposits, real withdrawals or real-money bets.</div></div>
   </div>`;
@@ -1208,7 +1208,7 @@ function termsPage() {
   return `${pageHead('Terms & demo rules', 'The short version: everything here is virtual.')}
   <div class="card">
     <ol class="steps">
-      <li>Accounts are demo accounts identified by a phone number and password.</li>
+      <li>Accounts are accounts identified by a phone number and password.</li>
       <li>Demo credits have no monetary value and are non-transferable.</li>
       <li>Deposits (100 – 10,000 ETB) and withdrawals (500 – 50,000 ETB) are virtual requests reviewed by the operator.</li>
       <li>Uploaded screenshots are stored only as demonstration proof and are visible to the operator.</li>
@@ -1445,7 +1445,7 @@ async function render() {
         return;
       }
       if (amount > Number(state.user.balance)) {
-        toast('That amount exceeds your virtual balance.', 'error');
+        toast('That amount exceeds your balance.', 'error');
         return;
       }
       submit.disabled = true;
