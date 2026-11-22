@@ -86,8 +86,8 @@ function navHtml() {
 function headerHtml() {
   const user = state.user;
   const account = user
-    ? `<a class="balance-chip" href="#/dashboard" title="Your virtual balance">
-         <i class="dot"></i><strong data-balance>${money(user.balance)}</strong><span class="cur">virtual</span>
+    ? `<a class="balance-chip" href="#/dashboard" title="Your balance">
+         <i class="dot"></i><strong data-balance>${money(user.balance)}</strong><span class="cur">available</span>
        </a>
        <a class="icon-btn" href="#/dashboard" title="Dashboard" aria-label="Dashboard">${icon('grid')}</a>
        <button class="icon-btn" data-logout title="Sign out" aria-label="Sign out">${icon('logout')}</button>`
