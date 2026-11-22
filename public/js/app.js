@@ -1459,7 +1459,7 @@ async function render() {
             accountNumber: form.accountNumber.value.trim(),
           },
         });
-        toast(data.message || 'Demo withdrawal requested.', 'success');
+        toast(data.message || 'Withdrawal requested.', 'success');
         await render();
       } catch (err) {
         toast(err.message, 'error');

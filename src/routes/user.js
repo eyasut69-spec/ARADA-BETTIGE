@@ -64,13 +64,13 @@ function serializeWithdrawal(withdrawal) {
 }
 
 function demoHints() {
-  const hints = [{ role: 'player', phone: '0912000000', password: 'Demo@1234', label: 'Demo player' }];
+  const hints = [{ role: 'player', phone: '0912000000', password: 'Demo@1234', label: 'Player account' }];
   if (!process.env.ADMIN_PASSWORD) {
     hints.push({
       role: 'admin',
       phone: process.env.ADMIN_PHONE || '0911000000',
       password: 'Arada@Admin1',
-      label: 'Demo admin',
+      label: 'Admin account',
     });
   }
   return hints;
@@ -250,7 +250,7 @@ router.post('/deposits', requireAuth, (req, res) => {
   const method = String(req.body.method || '');
   if (!Number.isFinite(amount) || amount < LIMITS.depositMin || amount > LIMITS.depositMax) {
     return res.status(400).json({
-      error: `Demo deposits must be between ${LIMITS.depositMin} and ${LIMITS.depositMax} ETB.`,
+      error: `Deposits must be between ${LIMITS.depositMin} and ${LIMITS.depositMax} ETB.`,
     });
   }
   if (!DEPOSIT_METHODS.some((m) => m.id === method)) {

@@ -95,7 +95,7 @@ function seedUser({ phone, password, name, role, balance }) {
     createdAt: new Date().toISOString(),
     lastLoginAt: null,
     stats: { bets: 0, wagered: 0, won: 0, wins: 0 },
-    note: role === 'admin' ? 'Platform administrator (demo)' : 'Seeded demo player',
+    note: role === 'admin' ? 'Platform administrator' : 'Seeded player',
   };
   state.users.push(user);
   if (balance > 0) {
@@ -104,7 +104,7 @@ function seedUser({ phone, password, name, role, balance }) {
       type: 'bonus',
       amount: balance,
       status: 'approved',
-      note: 'Seeded demo credits',
+      note: 'Welcome credits',
     });
   }
   return user;
@@ -121,7 +121,7 @@ function seedUsers() {
   seedUser({
     phone: '0912000000',
     password: 'Demo@1234',
-    name: 'Demo Player',
+    name: 'Player',
     role: 'player',
     balance: 5000,
   });
@@ -419,7 +419,7 @@ function createDeposit(user, { amount, method }) {
     status: 'pending',
     method,
     reference: deposit.reference,
-    note: 'Demo deposit request',
+    note: 'Deposit request',
     relatedId: deposit.id,
   });
   deposit.transactionId = tx.id;
@@ -488,7 +488,7 @@ function approveDeposit(deposit, admin, note = '') {
   deposit.adminNote = note;
   adjustBalance(user, deposit.amount);
   const tx = db().transactions.find((t) => t.id === deposit.transactionId);
-  if (tx) updateTransaction(tx, { status: 'approved', note: note || 'Demo deposit approved' });
+  if (tx) updateTransaction(tx, { status: 'approved', note: note || 'Deposit approved' });
   persist();
   return deposit;
 }
@@ -502,7 +502,7 @@ function rejectDeposit(deposit, admin, note = '') {
   deposit.status = 'rejected';
   deposit.reviewedBy = admin.id;
   deposit.reviewedAt = new Date().toISOString();
-  deposit.adminNote = note || 'Demo payment could not be verified.';
+  deposit.adminNote = note || 'Payment could not be verified.';
   const tx = db().transactions.find((t) => t.id === deposit.transactionId);
   if (tx) updateTransaction(tx, { status: 'rejected', note: deposit.adminNote });
   persist();
@@ -535,7 +535,7 @@ function createWithdrawal(user, { amount, method, accountName, accountNumber }) 
     status: 'pending',
     method,
     reference: withdrawal.reference,
-    note: `Demo withdrawal to ${accountNumber}`,
+    note: `Withdrawal to ${accountNumber}`,
     relatedId: withdrawal.id,
   });
   withdrawal.transactionId = tx.id;
@@ -553,7 +553,7 @@ function approveWithdrawal(withdrawal, admin, note = '') {
   withdrawal.status = 'approved';
   withdrawal.reviewedBy = admin.id;
   withdrawal.reviewedAt = new Date().toISOString();
-  withdrawal.adminNote = note || 'Demo payout approved.';
+  withdrawal.adminNote = note || 'Payout approved.';
   const tx = db().transactions.find((t) => t.id === withdrawal.transactionId);
   if (tx) updateTransaction(tx, { status: 'approved', note: withdrawal.adminNote });
   persist();
@@ -569,7 +569,7 @@ function rejectWithdrawal(withdrawal, admin, note = '') {
   withdrawal.status = 'rejected';
   withdrawal.reviewedBy = admin.id;
   withdrawal.reviewedAt = new Date().toISOString();
-  withdrawal.adminNote = note || 'Demo withdrawal rejected, credits returned.';
+  withdrawal.adminNote = note || 'Withdrawal rejected, credits returned.';
   const user = findUserById(withdrawal.userId);
   if (user) adjustBalance(user, withdrawal.amount);
   const tx = db().transactions.find((t) => t.id === withdrawal.transactionId);
@@ -619,7 +619,7 @@ function sweep() {
     if (deposit.status === 'pending' && new Date(deposit.expiresAt).getTime() <= now) {
       deposit.status = 'rejected';
       deposit.reviewedAt = new Date().toISOString();
-      deposit.adminNote = 'Expired: demo payment was not approved within 19 minutes.';
+      deposit.adminNote = 'Expired: payment was not approved within 19 minutes.';
       const tx = state.transactions.find((t) => t.id === deposit.transactionId);
       if (tx && tx.status === 'pending') {
         tx.status = 'rejected';

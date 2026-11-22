@@ -130,7 +130,7 @@ function footerHtml() {
       <a href="#/promotions">Promotions</a>
       <a href="#/support">Support &amp; FAQ</a>
       <a href="#/responsible">Responsible play</a>
-      <a href="#/terms">Terms &amp; demo rules</a>
+      <a href="#/terms">Terms &amp; rules</a>
     </div>
     <div class="footer-col">
       <h4>Account</h4>
@@ -254,7 +254,7 @@ function demoHintsHtml() {
   const hints = state.config?.demoHints || [];
   if (!hints.length) return '';
   return `<div class="divider"></div>
-    <div class="tiny muted" style="letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px">Demo access</div>
+    <div class="tiny muted" style="letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px">Quick access</div>
     <div class="chip-row">
       ${hints
         .map(
@@ -263,7 +263,7 @@ function demoHintsHtml() {
         )
         .join('')}
     </div>
-    <p class="tiny muted mt-8">Tap a demo account to fill the sign-in form instantly.</p>`;
+    <p class="tiny muted mt-8">Tap an account to fill the sign-in form instantly.</p>`;
 }
 
 function recoveryCodeHtml(code, message) {

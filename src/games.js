@@ -57,7 +57,7 @@ function assertBet(user, game, stake) {
     throw err;
   }
   if (rounded > user.balance) {
-    const err = new Error('Insufficient demo balance. Claim free credits from the cashier.');
+    const err = new Error('Insufficient balance. Add credits from the cashier.');
     err.status = 400;
     throw err;
   }
