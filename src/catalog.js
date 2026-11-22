@@ -20,6 +20,12 @@ const LIMITS = {
   maxBet: 10000,
   welcomeBonus: 1000,
   depositWindowMs: 19 * 60 * 1000, // 19 minute window to upload payment proof
+  referralBonus: 100,
+};
+
+const REFERRAL = {
+  bonus: 100,
+  codePrefix: 'ARADA',
 };
 
 const TRANSACTION_STATUSES = ['pending', 'approved', 'rejected'];
@@ -162,6 +168,40 @@ const GAME_DEFS = [
       'Pick any digit from 0 to 9.',
       'Place your stake and draw the lucky digit.',
       'A perfect match pays 9.5x instantly.',
+    ],
+  },
+  {
+    slug: 'vip-baccarat',
+    name: 'VIP Baccarat',
+    short: 'Back the Player, the Banker or a Tie.',
+    category: 'Casino',
+    rtp: 0.99,
+    minBet: 50,
+    maxBet: 10000,
+    badge: 'CASINO',
+    accent: '#d4af37',
+    howTo: [
+      'Choose Player, Banker or Tie and set your stake.',
+      'Eight decks are shuffled and both sides receive two cards.',
+      'Face cards count 0, an Ace counts 1, and the last digit of the total is the hand value.',
+      'The side closest to 9 wins. Player and Banker pay 1.95x, a Tie pays 9x.',
+    ],
+  },
+  {
+    slug: 'vip-blackjack',
+    name: 'VIP Blackjack',
+    short: 'Beat the dealer to 21 with hit, stand and double.',
+    category: 'Casino',
+    rtp: 0.99,
+    minBet: 50,
+    maxBet: 5000,
+    badge: 'CASINO',
+    accent: '#f5d67b',
+    howTo: [
+      'Set your stake and deal two cards against the dealer.',
+      'Hit to take another card, stand to hold your total.',
+      'Double doubles your stake, deals exactly one more card and then stands.',
+      'The dealer draws to 17. A blackjack pays 2.5x, a win pays 2x and a push returns your stake.',
     ],
   },
 ];
