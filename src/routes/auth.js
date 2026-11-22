@@ -71,11 +71,14 @@ router.post('/register', (req, res) => {
   const problem = passwordProblem(password);
   if (problem) return res.status(400).json({ error: problem });
   if (!accepted) {
-    return res.status(400).json({ error: 'Please confirm you understand this is a virtual-money demo.' });
+    return res.status(400).json({ error: 'Please confirm you are 18+ and accept the ARADA BETTING terms.' });
   }
   if (store.findUserByPhone(phone)) {
     return res.status(409).json({ error: 'An account with this phone number already exists. Please sign in.' });
   }
+
+  const refCode = String(req.body.referral || req.body.ref || '').trim().toUpperCase();
+  const inviter = refCode ? store.findUserByReferralCode(refCode) : null;
 
   const bonus = Number(store.db().settings.welcomeBonus ?? LIMITS.welcomeBonus);
   const { user, recoveryCode } = store.createUser({
@@ -83,6 +86,7 @@ router.post('/register', (req, res) => {
     name: name || `Player ${phone.slice(-4)}`,
     password,
     balance: bonus,
+    referredBy: inviter ? inviter.id : null,
   });
   if (bonus > 0) {
     store.addTransaction({
@@ -90,14 +94,39 @@ router.post('/register', (req, res) => {
       type: 'bonus',
       amount: bonus,
       status: 'approved',
-      note: 'Welcome demo credits',
+      note: 'Welcome credits',
     });
   }
+
+  const inviteBonus = Number(store.db().settings.referralBonus ?? LIMITS.referralBonus);
+  if (inviter && inviter.id !== user.id && inviteBonus > 0) {
+    store.adjustBalance(inviter, inviteBonus);
+    inviter.referralCount = Number(inviter.referralCount || 0) + 1;
+    store.addTransaction({
+      userId: inviter.id,
+      type: 'referral',
+      amount: inviteBonus,
+      status: 'approved',
+      note: `Invite bonus — ${user.name} joined with ${refCode}`,
+    });
+    store.adjustBalance(user, inviteBonus);
+    store.addTransaction({
+      userId: user.id,
+      type: 'referral',
+      amount: inviteBonus,
+      status: 'approved',
+      note: `Invite bonus from ${refCode}`,
+    });
+    store.persist();
+  }
+
   startSession(req, res, user);
+  const total = bonus + (inviter ? inviteBonus : 0);
   return res.status(201).json({
     user: store.publicUser(user),
     recoveryCode,
-    message: `Welcome to ARADA BETTING. ${bonus.toLocaleString()} ETB demo credits added.`,
+    invited: Boolean(inviter),
+    message: `Welcome to ARADA BETTING. ${total.toLocaleString()} ETB added to your balance.`,
   });
 });
 

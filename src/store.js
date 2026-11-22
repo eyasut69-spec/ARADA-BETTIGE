@@ -174,6 +174,38 @@ function db() {
 
 /* ------------------------------------------------------------------ users */
 
+function newReferralCode() {
+  const users = db().users;
+  for (let i = 0; i < 30; i += 1) {
+    const code = `ARADA${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    if (!users.some((u) => u.referralCode === code)) return code;
+  }
+  return `ARADA${Date.now().toString(36).toUpperCase().slice(-5)}`;
+}
+
+/** Legacy accounts get a stable invite code the first time it is requested. */
+function referralCodeFor(user) {
+  if (!user) return null;
+  if (!user.referralCode) {
+    user.referralCode = newReferralCode();
+    persist();
+  }
+  return user.referralCode;
+}
+
+function referralCountOf(user) {
+  if (!user) return 0;
+  const recorded = Number(user.referralCount || 0);
+  if (recorded > 0) return recorded;
+  return db().users.filter((u) => u.referredBy === user.id).length;
+}
+
+function findUserByReferralCode(code) {
+  const clean = String(code || '').trim().toUpperCase();
+  if (!clean) return null;
+  return db().users.find((u) => u.referralCode && u.referralCode === clean) || null;
+}
+
 function publicUser(user) {
   if (!user) return null;
   return {
@@ -194,6 +226,9 @@ function publicUser(user) {
     hasRecovery: Boolean(user.recoveryHash),
     isGuest: Boolean(user.isGuest),
     note: user.note || '',
+    referralCode: referralCodeFor(user),
+    referralCount: referralCountOf(user),
+    referredBy: user.referredBy || null,
   };
 }
 
@@ -205,7 +240,7 @@ function findUserById(id) {
   return db().users.find((u) => u.id === id) || null;
 }
 
-function createUser({ phone, name, password, role = 'player', balance = 0 }) {
+function createUser({ phone, name, password, role = 'player', balance = 0, referredBy = null }) {
   const { salt, hash } = sec.hashPassword(password);
   const recoveryCode = sec.generateRecoveryCode();
   const recovery = sec.hashRecoveryCode(sec.normalizeRecoveryCode(recoveryCode));
@@ -224,6 +259,9 @@ function createUser({ phone, name, password, role = 'player', balance = 0 }) {
     lastLoginAt: null,
     stats: { bets: 0, wagered: 0, won: 0, wins: 0 },
     note: '',
+    referralCode: newReferralCode(),
+    referralCount: 0,
+    referredBy: referredBy || null,
   };
   db().users.push(user);
   persist();
@@ -248,8 +286,11 @@ function createGuest() {
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
     stats: { bets: 0, wagered: 0, won: 0, wins: 0 },
-    note: 'Guest demo wallet — not linked to a phone number',
+    note: 'Guest wallet — not linked to a phone number',
     isGuest: true,
+    referralCode: newReferralCode(),
+    referralCount: 0,
+    referredBy: null,
   };
   db().users.push(user);
   persist();
@@ -608,6 +649,8 @@ module.exports = {
   publicUser,
   findUserByPhone,
   findUserById,
+  findUserByReferralCode,
+  referralCodeFor,
   createUser,
   createGuest,
   rotateRecoveryCode,
