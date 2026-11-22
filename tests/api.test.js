@@ -300,6 +300,13 @@ async function main() {
   check(wd.status === 'pending', 'new withdrawal should be pending');
   ok('demo withdrawal request created as pending');
 
+  const held = await player.get('/api/me/overview');
+  check(
+    Math.abs(held.data.user.balance - (balance0 - 500)) < 0.01,
+    `pending withdrawal should hold 500, got ${held.data.user.balance}`,
+  );
+  ok('pending withdrawal holds the demo amount until review');
+
   // --- admin ---------------------------------------------------------------
   const adminLogin = await admin.post('/api/auth/login', { phone: '0911000000', password: 'Arada@Admin1' });
   check(adminLogin.status === 200, `admin login should work, got ${adminLogin.status}: ${JSON.stringify(adminLogin.data)}`);
@@ -332,8 +339,8 @@ async function main() {
 
   const afterDeposit = await player.get('/api/me/overview');
   check(
-    Math.abs(afterDeposit.data.user.balance - (balance0 + 500)) < 0.01,
-    `balance should increase by 500, was ${balance0} now ${afterDeposit.data.user.balance}`,
+    Math.abs(afterDeposit.data.user.balance - (held.data.user.balance + 500)) < 0.01,
+    `balance should rise by 500 from ${held.data.user.balance}, got ${afterDeposit.data.user.balance}`,
   );
   check(afterDeposit.data.stats.depositTotal === 500, 'approved deposit should count in totals');
   ok('approved demo deposit credits the player balance');
@@ -362,13 +369,37 @@ async function main() {
   check(approveWd.data.withdrawal.status === 'approved', 'withdrawal should be approved');
   const afterWd = await player.get('/api/me/overview');
   check(
-    Math.abs(afterWd.data.user.balance - (afterDeposit.data.user.balance - 500)) < 0.01,
-    `approved withdrawal should debit 500, got ${afterWd.data.user.balance}`,
+    Math.abs(afterWd.data.user.balance - afterReject.data.user.balance) < 0.01,
+    `approved withdrawal must not debit twice, got ${afterWd.data.user.balance}`,
   );
-  ok('approved demo withdrawal debits the virtual balance');
+  ok('approved demo withdrawal settles the amount already held');
+
+  const wd2 = await player.post('/api/withdrawals', {
+    amount: 500,
+    method: 'cbebirr',
+    accountName: 'Test Player',
+    accountNumber: '0912345678',
+  });
+  check(wd2.status === 201, 'second withdrawal should be created');
+  const afterHold = await player.get('/api/me/overview');
+  check(
+    Math.abs(afterHold.data.user.balance - (afterWd.data.user.balance - 500)) < 0.01,
+    'new withdrawal should hold its amount',
+  );
+  const rejectWd = await admin.post(`/api/admin/withdrawals/${wd2.data.withdrawal.id}/decision`, {
+    decision: 'reject',
+    note: 'Demo refund',
+  });
+  check(rejectWd.status === 200 && rejectWd.data.withdrawal.status === 'rejected', 'second withdrawal should be rejected');
+  const afterRefund = await player.get('/api/me/overview');
+  check(
+    Math.abs(afterRefund.data.user.balance - afterWd.data.user.balance) < 0.01,
+    `rejected withdrawal should refund the hold, got ${afterRefund.data.user.balance}`,
+  );
+  ok('rejected demo withdrawal returns the held credits');
 
   // balance adjustment
-  const beforeAdjust = afterWd.data.user.balance;
+  const beforeAdjust = afterRefund.data.user.balance;
   const adjust = await admin.post(`/api/admin/users/${listedPlayer.id}/balance`, {
     amount: 1000,
     note: 'Demo bonus',
